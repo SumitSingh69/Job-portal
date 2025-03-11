@@ -1,6 +1,6 @@
 import User from "../model/user.Model.js";
 import { z } from 'zod';
-import { upload, cloudinary } from "../config/cloudinary.config.js";
+// import { upload, cloudinary } from "../config/cloudinary.config.js";
 import { mongoose } from "mongoose"
 import { isAuthenticated, isAdmin } from "../middleware/auth.js";
 
@@ -131,14 +131,14 @@ export const updateUser = [isAuthenticated, async (req, res, next) => {
           return res.status(404).json({ message: 'User not found' });
         }
 
-        if (existingUser.image && req.file) {
-          try {
-            const publicId = existingUser.image.split('/').pop().split('.')[0];
-            await cloudinary.uploader.destroy(`User-Images/${publicId}`);
-          } catch (deleteError) {
-            console.error("Error deleting old image:", deleteError);
-          }
-        }
+        // if (existingUser.image && req.file) {
+        //   try {
+        //     const publicId = existingUser.image.split('/').pop().split('.')[0];
+        //     // await cloudinary.uploader.destroy(`User-Images/${publicId}`);
+        //   } catch (deleteError) {
+        //     console.error("Error deleting old image:", deleteError);
+        //   }
+        // }
 
         const updatedUser = await User.findByIdAndUpdate(
           id,
