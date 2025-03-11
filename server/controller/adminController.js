@@ -1,7 +1,7 @@
-import AdminModel from '../model/adminModel';
-import isAdmin from '../middleware/auth.js'
+import AdminModel from '../model/adminModel.js';
+// import isAdmin from '../middleware/auth.js'
 
-export const createAdmin =[isAdmin , async(req , res , next )=>{
+export const createAdmin =[async(req , res , next )=>{
     try{
        const {username  , password, email, role} = req.body;
 
@@ -64,7 +64,7 @@ export const Adminlogin = async (req , res, next) =>{
     }
 }
 
-export const updateAdmin = [isAdmin , async(req , res , next)=>{
+export const updateAdmin = [async(req , res , next)=>{
     try{
             const {id ,AdminData} = req.body;
             if(!id){
@@ -88,7 +88,7 @@ export const updateAdmin = [isAdmin , async(req , res , next)=>{
         })
     }
 }]
-export const deleteAdmin = [isAdmin , async(req , res , next)=>{
+export const deleteAdmin = [async(req , res , next)=>{
     try{
         const {id} = req.params;
         if(!mongoose.Types.ObjectId.isValid(id)){
