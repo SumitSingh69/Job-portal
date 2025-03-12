@@ -41,7 +41,7 @@ app.use(cookieParser());
 
 const PORT = process.env.PORT || 8080;
 
-app.get('/', asyncHandler(async (req, res) => {
+app.get('/', (async (req, res) => {
     // throw new NotFoundException("this is a bad request")
     res.json({
         message: "server is running"

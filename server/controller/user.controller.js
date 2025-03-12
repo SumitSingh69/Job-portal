@@ -5,6 +5,23 @@ import { signUpSchema, loginSchema } from "../validation/auth.validation.js";
 import asyncHandler from "../middleware/asyncHandler.js";
 import jwt from "jsonwebtoken";
 
+// Utility function to generate tokens for a user
+const generateTokens = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  // Save refresh token to database
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  return { accessToken, refreshToken };
+};
+
 export const signUp = async (req, res, next) => {
   try {
     const signupValidate = signUpSchema.parse(req.body);
@@ -37,10 +54,11 @@ export const signUp = async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
     }
+    next(error);
   }
 };
 
-export const refreshAccessToken = asyncHandler(async (req, res, next) => {
+export const refreshAccessToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
@@ -72,11 +90,11 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
       }
     );
   } catch (error) {
-    return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
+    next(error);
   }
-});
+};
 
-export const login = asyncHandler(async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const validatedData = loginSchema.parse(req.body);
     const { email, password } = validatedData;
@@ -97,16 +115,14 @@ export const login = asyncHandler(async (req, res, next) => {
       });
     }
 
-    const { accessToken, refreshToken } = await refreshAccessToken(
-      existingUser._id
-    );
+    // Generate new tokens
+    const { accessToken, refreshToken } = await generateTokens(existingUser._id);
 
     const loggedInUser = await User.findById(existingUser._id).select(
       "-password -refreshToken"
     );
 
     const options = {
-      expiresIn: "1h",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -136,20 +152,19 @@ export const login = asyncHandler(async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
     }
+    next(error);
   }
-});
+};
 
-export const logout = asyncHandler(async (req, res, next) => {
+export const logout = async (req, res, next) => {
   try {
     await User.findByIdAndUpdate(req.user?.userId, {
       $set: {
         refreshToken: null,
       },
-      new: true,
-    });
+    }, { new: true });
 
     const options = {
-      expiresIn: "1h",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -164,5 +179,6 @@ export const logout = asyncHandler(async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
     }
+    next(error);
   }
-});
+};
