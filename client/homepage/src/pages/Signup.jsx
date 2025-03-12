@@ -6,24 +6,31 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, Github } from 'lucide-react';
-import api from "../api/api";
+import { signUpUser } from '@/api/api';
+import { toast } from "sonner"
 const Login = () => {
-    const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password1, setPassword1] = useState('');
-    const [password2, setPassword2] = useState('');
+
     const [showPassword1, setShowPassword1] = useState(false);
     const [showPassword2, setShowPassword2] = useState(false);
     const [formData, setFormData] = useState({
-        fullName: "",
+        firstName: "",
+        lastName:"",
         email: "",
+        role:"",
+        phonenumber:"",
         password1: "",
         password2: "",
     });
-    useEffect(() => {
-        const temp = api.get('/job');
-        console.log(temp);
-    }, []);
+
+    const [updatedData, setUpdatedData] = useState({
+        firstName: "",
+        lastName:"",
+        email: "",
+        role:"",
+        phonenumber:"",
+        password:"",
+    });
+   
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -32,12 +39,33 @@ const Login = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(formData);
-        if(formData.password1 !== formData.password2) alert("passwords do not match");
-        // Handle login logic here
+    
+        if (formData.password1 !== formData.password2) {
+            alert("Passwords do not match");
+            return;
+        }
+    
+        const userData = {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            role: formData.role,
+            phonenumber: formData.phonenumber,
+            password: formData.password1
+        };
+    
+        try {
+            const res = await signUpUser(userData);
+            console.log("Signup Response:", res);
+            toast(res.message);
+        } catch (error) {
+            toast(error?.response?.data?.message);
+            console.error("Signup failed:", error);
+        }
     };
+    
 
     return (
         <motion.div
@@ -58,13 +86,25 @@ const Login = () => {
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name</Label>
+                        <Label htmlFor="firstName">first Name</Label>
                         <Input
-                            id="fullName"
+                            id="firstName"
                             type="text"
-                            name="fullName"
-                            placeholder="Enter full name"
-                            value={formData.fullName}
+                            name="firstName"
+                            placeholder="Enter first name"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="lastName">last Name</Label>
+                        <Input
+                            id="lastName"
+                            type="text"
+                            name="lastName"
+                            placeholder="Enter last name"
+                            value={formData.lastName}
                             onChange={handleChange}
                             required
                         />
@@ -77,6 +117,30 @@ const Login = () => {
                             name="email"
                             placeholder="Enter email"
                             value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="role">role</Label>
+                        <Input
+                            id="role"
+                            type="text"
+                            name="role"
+                            placeholder="Enter role"
+                            value={formData.role}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="role">phone number</Label>
+                        <Input
+                            id="phonenumber"
+                            type="number"
+                            name="phonenumber"
+                            placeholder="Enter phone number"
+                            value={formData.phonenumber}
                             onChange={handleChange}
                             required
                         />

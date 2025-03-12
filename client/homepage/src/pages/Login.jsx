@@ -1,5 +1,6 @@
-// components/Login.jsx
-import { useState, useEffect } from 'react';
+import { useState, useContext } from 'react';
+import { AuthContext } from "@/context/AuthContext"; // Import AuthContext
+import { loginUser } from "@/api/api";
 import { motion } from 'framer-motion';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, Github } from 'lucide-react';
-import api from "../api/api";
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -15,12 +15,8 @@ const Login = () => {
         password: "",
     });
 
-    useEffect(() => {
-        const temp = api.get('/job');
-        console.log(temp);
-    }, []);
-
     const [showPassword, setShowPassword] = useState(false);
+    const { login } = useContext(AuthContext); // Access login function from AuthContext
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,10 +26,20 @@ const Login = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(formData);
-        // Handle login logic here
+        try {
+            const response = await loginUser(formData); // Call API
+
+            if (response?.token && response?.user) {
+                login(response.user, response.token); // Store user & token in context + localStorage
+                console.log("Login successful", response);
+            } else {
+                console.error("Invalid login response", response);
+            }
+        } catch (error) {
+            console.error("Login failed:", error);
+        }
     };
 
     return (
@@ -42,9 +48,8 @@ const Login = () => {
             animate={{ y: 0 }}
             transition={{ duration: 0.3 }}
             className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center relative"
-            style={{ backgroundImage: "url('/jobBg_cleanup.jpg')" }} // Ensure the path is correct
+            style={{ backgroundImage: "url('/jobBg_cleanup.jpg')" }}
         >
-       
             <div className="absolute inset-0 bg-black/40"></div>
 
             {/* Login Form */}
