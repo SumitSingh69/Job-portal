@@ -1,43 +1,19 @@
 import User from "../model/user.Model.js";
-import { z } from 'zod';
-// import { upload, cloudinary } from "../config/cloudinary.config.js";
-import { mongoose } from "mongoose"
-import { isAuthenticated, isAdmin } from "../middleware/auth.js";
-
-const signUpSchema = z.object({
-  firstName: z.string().min(2).max(39),
-  lastName: z.string().min(2).max(39),
-  username: z.string().min(2).max(40),
-  password: z.string().min(8).max(20).regex(/^[A-Z]/).regex(/[!@#$%^&*:"?><]/).regex(/\d/),
-  role: z.string().optional(),
-  phonenumber: z.string(),
-  email: z.string().email()
-
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(20).regex(/^[A-Z]/).regex(/[!@#$%^&*:"?>]/).regex(/\d/)
-});
+import { z } from "zod";
+import { HTTPSTATUS } from "../config/https.config.js";
+import { signUpSchema, loginSchema } from "../validation/auth.validation.js";
+import asyncHandler from "../middleware/asyncHandler.js";
+import jwt from "jsonwebtoken";
 
 export const signUp = async (req, res, next) => {
   try {
-
     const signupValidate = signUpSchema.parse(req.body);
-
-    const {
-      firstName,
-      lastName,
-      username,
-      password,
-      role,
-      phonenumber,
-      email,
-    } = signupValidate;
+    const { firstName, lastName, password, role, phonenumber, email } =
+      signupValidate;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
         message: "User with this email already exists",
       });
     }
@@ -45,7 +21,6 @@ export const signUp = async (req, res, next) => {
     const newUser = new User({
       firstName,
       lastName,
-      username,
       password,
       role,
       phonenumber,
@@ -53,138 +28,146 @@ export const signUp = async (req, res, next) => {
     });
 
     await newUser.save();
-    res.status(201).json({ message: 'User created successfully', user: newUser });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
-    }
-    next(error);
-  }
-};
 
-export const login = async (req, res, next) => {
-  try {
-    const validatedData = loginSchema.parse(req.body);
-    const { email, password } = validatedData;
-
-    const existingUser = await User.findOne({ email });
-    if (!existingUser) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    const isPasswordValid = await existingUser.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    req.session.userId = existingUser._id;
-    req.session.userLoggedIn = true;
-    req.session.userRole = existingUser.role;
-
-    const userResponse = {
-      id: existingUser._id,
-      firstName: existingUser.firstName,
-      lastName: existingUser.lastName,
-      email: existingUser.email,
-      role: existingUser.role,
-      phonenumber: existingUser.phonenumber,
-    };
-
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      user: userResponse,
+    res.status(HTTPSTATUS.CREATED).json({
+      message: "User created successfully",
+      user: newUser,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
     }
     next(error);
   }
 };
 
-export const updateUser = [isAuthenticated, async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid user ID' });
-    }
-
-    upload(req, res, async (err) => {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ message: `Upload error: ${err.message}` });
-      } else if (err) {
-        return res.status(400).json({ message: err.message });
+export const refreshAccessToken = asyncHandler(
+  async (req, res, next) => {
+    try {
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+          message: "No refresh token provided",
+        });
       }
 
-      try {
-        const updateData = { ...req.body };
-        delete updateData.id;
-
-        if (req.file) {
-          updateData.image = req.file.path;
+      jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
+        if (err) {
+          return res.status(HTTPSTATUS.FORBIDDEN).json({
+            message: "Invalid or expired refresh token",
+          });
         }
 
-        const existingUser = await User.findById(id);
-        if (!existingUser) {
-          return res.status(404).json({ message: 'User not found' });
+        const user = await User.findById(decoded.userId);
+        if (!user || user.refreshToken !== refreshToken) {
+          return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+            message: "User not found or refresh token mismatch",
+          });
         }
 
-        // if (existingUser.image && req.file) {
-        //   try {
-        //     const publicId = existingUser.image.split('/').pop().split('.')[0];
-        //     // await cloudinary.uploader.destroy(`User-Images/${publicId}`);
-        //   } catch (deleteError) {
-        //     console.error("Error deleting old image:", deleteError);
-        //   }
-        // }
+        const newAccessToken = user.generateAccessToken();
 
-        const updatedUser = await User.findByIdAndUpdate(
-          id,
-          updateData,
-          { new: true }
-        );
+        res.status(HTTPSTATUS.OK).json({ accessToken: newAccessToken });
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
-        res.status(200).json({
+export const login = asyncHandler(
+  async (req, res, next) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      const { email, password } = validatedData;
+
+      // Check if user exists in the database
+      const existingUser = await User.findOne({ email });
+      if (!existingUser) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+          message: "Invalid email or password",
+        });
+      }
+
+      // Check if password matches
+      const isPasswordValid = await existingUser.comparePassword(password);
+      if (!isPasswordValid) {
+        return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+          message: "Invalid email or password",
+        });
+      }
+
+      const { accessToken, refreshToken } = await refreshAccessToken(
+        existingUser._id
+      );
+
+      const loggedInUser = await User.findById(existingUser._id).select(
+        "-password -refreshToken"
+      );
+
+      const options = {
+        expiresIn: "1h",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      };
+
+      const userResponse = {
+        id: loggedInUser._id,
+        firstName: loggedInUser.firstName,
+        lastName: loggedInUser.lastName,
+        email: loggedInUser.email,
+        role: loggedInUser.role,
+        phonenumber: loggedInUser.phonenumber,
+      };
+
+      res
+        .status(HTTPSTATUS.OK)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json({
           success: true,
-          message: 'User updated successfully',
-          user: updatedUser
+          message: "Login successful",
+          user: userResponse,
+          accessToken,
+          refreshToken,
         });
-      } catch (error) {
-        console.error("Update user error:", error);
-        res.status(500).json({
-          success: false,
-          error: error.message || "Internal server error"
-        });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
       }
-    });
-  } catch (error) {
-    console.error("Update user error:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message || "Internal server error"
-    });
-  }
-}];
-
-export const deleteUser = [isAuthenticated, isAdmin, async (req, res, next) => {
-  try {
-    const { id } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid user ID' });
+      next(error);
     }
-
-    const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json({ message: 'User deleted successfully' });
-  } catch (error) {
-    console.error("Delete user error:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message || "Internal server error",
-    });
   }
-}];
+);
+
+export const logout = asyncHandler(
+  async (req, res, next) => {
+    try {
+      await User.findByIdAndUpdate(
+        req.user?.userId , {
+          $set : {
+            refreshToken : null
+          },
+          new : true
+        }
+      )
+
+      const options = {
+        expiresIn: "1h",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      };
+
+
+      res
+        .status(HTTPSTATUS.OK)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json({ success: true, message: "Logged out successfully" });
+    } catch (error) {
+      next(error);
+    }
+  }
+);

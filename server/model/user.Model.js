@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+const accessSecret =
+  process.env.JWT_ACCESS_SECRET || "your-access-token-secret";
+const refreshSecret =
+  process.env.JWT_REFRESH_SECRET || "your-refresh-token-secret";
 
 const userSchema = new mongoose.Schema(
   {
@@ -7,15 +13,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: [3, "First name must be at least 3 characters long"],
     },
+
     lastName: {
       type: String,
       required: true,
       trim: true,
+      minlength: [3, "Last name must be at least 3 characters long"],
     },
-    image : {
-      type : String,
+
+    image: {
+      type: String,
+      optional: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -23,59 +35,75 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    username: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-    },
+
     password: {
       type: String,
       required: true,
-      minlength: 8,
+      minlength: [8, "Password must be at least 8 characters long"],
     },
+
     role: {
       type: String,
       required: true,
-      enum: ["jobseeker", "recuriter"],
+      enum: ["jobseeker", "recruiter"],
     },
+
     phonenumber: {
-      type: Number,
+      type: String,
       required: true,
       trim: true,
-      minlength: 10,
+      minlength: [10, "Phone number must be at least 10 digits long"],
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+
+    refreshToken: {
+      type: String,
+      optional: true,
+      default: null,
     },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-userSchema.pre("save", async function (next) {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified("password")) return next();
+// Generate an access token
+userSchema.methods.generateAccessToken = function () {
+  const { _id, role } = this;
+  const accessToken = jwt.sign(
+    {
+      userId: _id,
+      role,
+    },
+    accessSecret,
+    {
+      expiresIn: "1h",
+    }
+  );
+  return accessToken;
+};
 
+// Generate a refresh token
+userSchema.methods.generateRefreshToken = function () {
+  const { _id, role } = this;
+  const refreshToken = jwt.sign({ userId: _id, role }, refreshSecret, {
+    expiresIn: "7d",
+  });
+  return refreshToken;
+};
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   try {
-    console.log("Hashing password for:", this.email);
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    console.log("Password hashed successfully");
     next();
   } catch (error) {
-    console.error("Password hashing error:", error);
     next(error);
   }
 });
 
-// Password comparison method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };

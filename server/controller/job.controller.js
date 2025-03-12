@@ -1,6 +1,6 @@
 import Jobs from '../model/jobs.Model.js';
 import { mongoose } from 'mongoose';
-import { isRecuriter,isAuthenticated } from '../middleware/auth.js';
+// import { isRecuriter,isAuthenticated } from '../middleware/auth.js';
 
 export const getJobById = async (req, res, next) => {
   try {
@@ -81,7 +81,7 @@ export const searchJobs = async (req, res, next) => {
 
 
 
-export const createJob = [isAuthenticated , isRecuriter , async (req, res, next) => {
+export const createJob = [async (req, res, next) => {
 
   try {
     const {
@@ -123,7 +123,7 @@ export const createJob = [isAuthenticated , isRecuriter , async (req, res, next)
   }
 }];
 
-export const updateJob = [isAuthenticated, isRecuriter, async (req, res, next) => {
+export const updateJob = [async (req, res, next) => {
   try {
  
     const { id } = req.params;
@@ -144,7 +144,7 @@ export const updateJob = [isAuthenticated, isRecuriter, async (req, res, next) =
   }
 }];
 
-export const deleteJob = [isAuthenticated, isRecuriter, async (req, res, next) => {
+export const deleteJob = [async (req, res, next) => {
   try {
     const { id } = req.params;
 

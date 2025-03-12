@@ -1,8 +1,8 @@
 import Companies from "../model/companies.Model.js";
 import { mongoose } from "mongoose";
-import { isAuthenticated,isAdmin ,isRecuriter } from "../middleware/auth.js";
+// import { isAuthenticated,isAdmin ,isRecuriter } from "../middleware/auth.js";
 
-export const createCompany = [isAuthenticated ,isRecuriter, async (req, res, next) => {
+export const createCompany = [async (req, res, next) => {
     try {
       const company = new Companies(req.body);
       await company.save();
@@ -12,7 +12,7 @@ export const createCompany = [isAuthenticated ,isRecuriter, async (req, res, nex
     }
   }];
 
-  export const getAllCompanies = [isAuthenticated , async (req, res, next) => {
+  export const getAllCompanies = [async (req, res, next) => {
     try {
       const companies = await Companies.find();
       res.status(200).json(companies);
@@ -21,7 +21,7 @@ export const createCompany = [isAuthenticated ,isRecuriter, async (req, res, nex
     }
   }];
 
-  export const getCompanyById =[isAuthenticated, async (req, res, next) => {
+  export const getCompanyById =[async (req, res, next) => {
     try {
       const company = await Companies.findById(req.params.id);
       if (!company) {
@@ -33,7 +33,7 @@ export const createCompany = [isAuthenticated ,isRecuriter, async (req, res, nex
     }
   }];
 
-  export const updateCompanyById = [isAuthenticated ,isRecuriter , async (req, res, next) => {
+  export const updateCompanyById = [async (req, res, next) => {
     try {
       const company = await Companies.findByIdAndUpdate(
         req.params.id,
@@ -49,7 +49,7 @@ export const createCompany = [isAuthenticated ,isRecuriter, async (req, res, nex
     }
   }];
 
-  export const deleteCompanyById = [isAdmin,isAuthenticated ,async (req, res, next) => {
+  export const deleteCompanyById = [async (req, res, next) => {
     try {
       const company = await Companies.findByIdAndDelete(req.params.id);
       if (!company) {

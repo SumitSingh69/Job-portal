@@ -5,6 +5,9 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/connect.js";
 import indexRouter from "./routes/routes.js";
 import session from "express-session";
+import asyncHandler from "./middleware/asyncHandler.js";
+import ErrorHandler from "./middleware/ErrorHandler.js";
+
 
 dotenv.config();
 
@@ -22,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use(session({
+    name: 'session',
     secret: process.env.SESSION_SECRET || 'yourSecretKey',
     resave: false,
     saveUninitialized: false,
@@ -34,23 +38,21 @@ app.use(session({
 }));
 
 app.use(cookieParser());
-app.use('/api', indexRouter);
 
 const PORT = process.env.PORT || 8080;
 
-app.get('/', (req, res) => {
+app.get('/', asyncHandler(async (req, res) => {
+    // throw new NotFoundException("this is a bad request")
     res.json({
         message: "server is running"
     });
-});
+}));
+
+app.use(ErrorHandler);
 
 
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        message: "Something went wrong!"
-    });h
-});
+app.use('/api', indexRouter);
+
 
 connectDB().then(() => {
     app.listen(PORT, () => {

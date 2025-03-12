@@ -1,9 +1,9 @@
 import Jobseeker from "../model/job-seeker.Model.js";
 import { mongoose } from "mongoose";
-import {isAuthenticated,isAdmin} from "../middleware/auth.js";
+// import {isAuthenticated,isAdmin} from "../middleware/auth.js";
 
 
-export const createJobseeker =[isAuthenticated ,async (req, res, next) => {
+export const createJobseeker =[async (req, res, next) => {
   try {
     const jobseeker = new Jobseeker(req.body);
     await jobseeker.save();
@@ -13,7 +13,7 @@ export const createJobseeker =[isAuthenticated ,async (req, res, next) => {
   }
 }];
 
-export const getAllJobseekers = [isAuthenticated,isAdmin ,async (req, res, next) => {
+export const getAllJobseekers = [async (req, res, next) => {
   try {
     const jobseekers = await Jobseeker.find();
     res.status(200).json(jobseekers);
@@ -22,7 +22,7 @@ export const getAllJobseekers = [isAuthenticated,isAdmin ,async (req, res, next)
   }
 }];
 
-export const getJobseekerById = [isAuthenticated ,isAdmin ,async (req, res, next) => {
+export const getJobseekerById = [async (req, res, next) => {
   try {
     const jobseeker = await Jobseeker.findById(req.params.id);
     if (!jobseeker) {
@@ -34,7 +34,7 @@ export const getJobseekerById = [isAuthenticated ,isAdmin ,async (req, res, next
   }
 }];
 
-export const updateJobseekerById = [isAuthenticated, async (req, res, next) => {
+export const updateJobseekerById = [async (req, res, next) => {
   try {
     const jobseeker = await Jobseeker.findByIdAndUpdate(
       req.params.id,
@@ -50,7 +50,7 @@ export const updateJobseekerById = [isAuthenticated, async (req, res, next) => {
   }
 }];
 
-export const deleteJobseekerById = [isAuthenticated ,isAdmin ,async (req, res, next) => {
+export const deleteJobseekerById = [async (req, res, next) => {
   try {
     const jobseeker = await Jobseeker.findByIdAndDelete(req.params.id);
     if (!jobseeker) {

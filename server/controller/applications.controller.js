@@ -1,8 +1,8 @@
 import Applications from "../model/applications.Model.js";
 import { mongoose } from "mongoose";
-import { isAuthenticated,isAdmin,isRecuriter } from "../middleware/auth.js";
+// import { isAuthenticated,isAdmin,isRecuriter } from "../middleware/auth.js";
 
-export const createApplication =[isAuthenticated , async (req ,res, next) => {
+export const createApplication =[async (req ,res, next) => {
   try {
     const application = new Applications(req.body);
     await application.save();
@@ -12,7 +12,7 @@ export const createApplication =[isAuthenticated , async (req ,res, next) => {
   }
 }]; 
 
-export const getAllApplications = [isAuthenticated ,isRecuriter ,async (req, res, next) => {
+export const getAllApplications = [async (req, res, next) => {
   try {
     const applications = await Applications.find();
     res.status(200).json(applications);
@@ -21,7 +21,7 @@ export const getAllApplications = [isAuthenticated ,isRecuriter ,async (req, res
   }
 }];
 
-export const getApplicationById = [isAuthenticated , isRecuriter ,async (req, res, next) => {
+export const getApplicationById = [async (req, res, next) => {
   try {
     const application = await Applications.findById(req.params.id);
     if (!application) {
@@ -33,7 +33,7 @@ export const getApplicationById = [isAuthenticated , isRecuriter ,async (req, re
   }
 }];
 
-export const updateApplicationById = [isAuthenticated,async (req, res, next) => {
+export const updateApplicationById = [async (req, res, next) => {
   try {
     const application = await Applications.findByIdAndUpdate(
       req.params.id,
@@ -49,7 +49,7 @@ export const updateApplicationById = [isAuthenticated,async (req, res, next) => 
   }
 }];
 
-export const deleteApplicationById = [isAuthenticated,isRecuriter,async (req, res, next) => {
+export const deleteApplicationById = [async (req, res, next) => {
   try {
     const application = await Applications.findByIdAndDelete(req.params.id);
     if (!application) {
