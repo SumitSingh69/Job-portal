@@ -166,7 +166,9 @@ export const logout = asyncHandler(
         .clearCookie("refreshToken", options)
         .json({ success: true, message: "Logged out successfully" });
     } catch (error) {
-      next(error);
+      if (error instanceof z.ZodError) {
+        return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
+      }
     }
   }
 );
