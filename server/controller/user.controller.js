@@ -136,7 +136,6 @@ export const login = asyncHandler(
       if (error instanceof z.ZodError) {
         return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
       }
-      next(error);
     }
   }
 );
