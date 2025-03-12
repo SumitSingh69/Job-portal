@@ -1,22 +1,24 @@
 import { useState, useContext } from 'react';
-import { AuthContext } from "@/context/AuthContext"; // Import AuthContext
+import { AuthContext } from "@/context/AuthContext";
 import { loginUser } from "@/api/api";
 import { motion } from 'framer-motion';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; 
 import { Eye, EyeOff, Mail, Github } from 'lucide-react';
+
 
 const Login = () => {
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
-
+    const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const { login } = useContext(AuthContext); // Access login function from AuthContext
+    const { login } = useContext(AuthContext);
+    const navigate = useNavigate(); 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -28,17 +30,30 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        
         try {
-            const response = await loginUser(formData); // Call API
-
-            if (response?.token && response?.user) {
-                login(response.user, response.token); // Store user & token in context + localStorage
-                console.log("Login successful", response);
+            const response = await loginUser(formData);
+            
+            // Check if we have the expected data
+            if (response?.user && response?.token) {
+                // Success! Store in context and localStorage
+                login(response.user, response.token);
+                
+                // Optional: Show success message
+                // toast?.success("Login successful!");
+                
+                // Redirect to dashboard or home page
+                navigate('/dashboard');
             } else {
-                console.error("Invalid login response", response);
+                console.error("Invalid login response structure:", response);
+                // toast?.error("Login failed: Invalid response from server");
             }
         } catch (error) {
             console.error("Login failed:", error);
+            // toast?.error(error.response?.data?.message || "Login failed. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -99,7 +114,13 @@ const Login = () => {
                         </div>
                         <Link to="/forgot-password" className="text-blue-500 text-sm">Forgot Password?</Link>
                     </div>
-                    <Button type="submit" className="w-full">Sign In</Button>
+                    <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={loading}
+                    >
+                        {loading ? 'Signing in...' : 'Sign In'}
+                    </Button>
                 </form>
 
                 {/* OR Divider */}

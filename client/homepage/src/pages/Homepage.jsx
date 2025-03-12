@@ -27,9 +27,14 @@ import {
 } from "recharts";
 
 import { motion } from "framer-motion";
+import { AuthContext } from "@/context/AuthContext";
+import { useContext } from "react";
 
 const JobCategoriesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("IT Jobs");
+  const {user} = useContext(AuthContext);
+
+  console.log(user)
 
   const categories = {
     "IT Jobs": {

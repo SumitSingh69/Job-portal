@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import About from "./About";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,11 +11,19 @@ import {
   LogIn,
   Menu,
   X,
+  User,
+  LogOut,
+  Bell,
 } from "lucide-react";
+import { AuthContext } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const location = useLocation();
+  const {user} = useContext(AuthContext);
+  
+  const isLoggedIn = !!user?.id;
 
   const navItems = [
     { path: "/", text: "Home", icon: <Home size={20} /> },
@@ -37,9 +45,31 @@ const Navbar = () => {
     },
   };
 
+  const profileMenuVariants = {
+    closed: {
+      opacity: 0,
+      scale: 0.95,
+      y: -10,
+      transition: { duration: 0.2, ease: "easeInOut" },
+    },
+    open: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: { duration: 0.2, ease: "easeInOut" },
+    },
+  };
+
   const linkVariants = {
     hover: { scale: 1.05, transition: { duration: 0.2 } },
     tap: { scale: 0.95 },
+  };
+
+  const handleLogout = () => {
+    // Implement your logout functionality here
+    console.log("Logging out...");
+    // After logout, close the profile dropdown
+    setIsProfileOpen(false);
   };
 
   return (
@@ -96,32 +126,119 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <motion.div
-                whileHover="hover"
-                whileTap="tap"
-                variants={linkVariants}
-              >
-                <Link
-                  to="/signup"
-                  className="flex items-center space-x-1 text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full"
-                >
-                  <UserPlus size={20} />
-                  <span>Register</span>
-                </Link>
-              </motion.div>
-              <motion.div
-                whileHover="hover"
-                whileTap="tap"
-                variants={linkVariants}
-              >
-                <Link
-                  to="/login"
-                  className="flex items-center space-x-1 bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-full"
-                >
-                  <LogIn size={20} />
-                  <span>Login</span>
-                </Link>
-              </motion.div>
+              {isLoggedIn ? (
+                <div className="flex items-center space-x-4">
+                  {/* Notifications */}
+                  <motion.div
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={linkVariants}
+                  >
+                    <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600">
+                      <Bell size={20} />
+                    </Link>
+                  </motion.div>
+                  
+                  {/* User Profile Dropdown */}
+                  <div className="relative">
+                    <motion.button
+                      whileHover="hover"
+                      whileTap="tap"
+                      variants={linkVariants}
+                      onClick={() => setIsProfileOpen(!isProfileOpen)}
+                      className="flex items-center space-x-2 bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2 rounded-full"
+                    >
+                      <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                        {user.firstName.charAt(0).toUpperCase()}
+                        {user.lastName.charAt(0).toUpperCase()}
+                      </div>
+                      <span>{user.firstName}</span>
+                    </motion.button>
+                    
+                    <AnimatePresence>
+                      {isProfileOpen && (
+                        <motion.div
+                          initial="closed"
+                          animate="open"
+                          exit="closed"
+                          variants={profileMenuVariants}
+                          className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10"
+                        >
+                          <div className="px-4 py-3 border-b">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {user.firstName} {user.lastName}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {user.email}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Role: <span className="capitalize">{user.role}</span>
+                            </p>
+                          </div>
+                          <Link 
+                            to="/profile" 
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <User size={16} />
+                              <span>My Profile</span>
+                            </div>
+                          </Link>
+                          <Link 
+                            to="/applications" 
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setIsProfileOpen(false)}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Briefcase size={16} />
+                              <span>My Applications</span>
+                            </div>
+                          </Link>
+                          <button 
+                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            onClick={handleLogout}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <LogOut size={16} />
+                              <span>Logout</span>
+                            </div>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <motion.div
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={linkVariants}
+                  >
+                    <Link
+                      to="/signup"
+                      className="flex items-center space-x-1 text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full"
+                    >
+                      <UserPlus size={20} />
+                      <span>Register</span>
+                    </Link>
+                  </motion.div>
+                  <motion.div
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={linkVariants}
+                  >
+                    <Link
+                      to="/login"
+                      className="flex items-center space-x-1 bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-full"
+                    >
+                      <LogIn size={20} />
+                      <span>Login</span>
+                    </Link>
+                  </motion.div>
+                </>
+              )}
             </div>
           </div>
 
@@ -166,34 +283,99 @@ const Navbar = () => {
                     </Link>
                   </motion.div>
                 ))}
-                <motion.div
-                  whileHover="hover"
-                  whileTap="tap"
-                  variants={linkVariants}
-                >
-                  <Link
-                    to="/signup"
-                    className="flex items-center space-x-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full text-center mt-4"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <UserPlus size={20} />
-                    <span>Register</span>
-                  </Link>
-                </motion.div>
-                <motion.div
-                  whileHover="hover"
-                  whileTap="tap"
-                  variants={linkVariants}
-                >
-                  <Link
-                    to="/login"
-                    className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-full text-center mt-2"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <LogIn size={20} />
-                    <span>Login</span>
-                  </Link>
-                </motion.div>
+
+                {isLoggedIn ? (
+                  <>
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex items-center space-x-2 px-3 py-2">
+                        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                          {user.firstName.charAt(0).toUpperCase()}
+                          {user.lastName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {user.firstName} {user.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <motion.div
+                        whileHover="hover"
+                        whileTap="tap"
+                        variants={linkVariants}
+                      >
+                        <Link
+                          to="/profile"
+                          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <User size={20} />
+                          <span>My Profile</span>
+                        </Link>
+                      </motion.div>
+                      
+                      <motion.div
+                        whileHover="hover"
+                        whileTap="tap"
+                        variants={linkVariants}
+                      >
+                        <Link
+                          to="/applications"
+                          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-md"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <Briefcase size={20} />
+                          <span>My Applications</span>
+                        </Link>
+                      </motion.div>
+                      
+                      <motion.button
+                        whileHover="hover"
+                        whileTap="tap"
+                        variants={linkVariants}
+                        className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:bg-gray-50 rounded-md w-full text-left"
+                        onClick={handleLogout}
+                      >
+                        <LogOut size={20} />
+                        <span>Logout</span>
+                      </motion.button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <motion.div
+                      whileHover="hover"
+                      whileTap="tap"
+                      variants={linkVariants}
+                    >
+                      <Link
+                        to="/signup"
+                        className="flex items-center space-x-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full text-center mt-4"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <UserPlus size={20} />
+                        <span>Register</span>
+                      </Link>
+                    </motion.div>
+                    <motion.div
+                      whileHover="hover"
+                      whileTap="tap"
+                      variants={linkVariants}
+                    >
+                      <Link
+                        to="/login"
+                        className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-full text-center mt-2"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <LogIn size={20} />
+                        <span>Login</span>
+                      </Link>
+                    </motion.div>
+                  </>
+                )}
               </div>
             </motion.div>
           )}
