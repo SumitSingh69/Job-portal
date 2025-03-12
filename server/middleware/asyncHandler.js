@@ -1,4 +1,4 @@
-import { HTTPSTATUS } from "../config/https.config";
+import { HTTPSTATUS } from "../config/https.config.js";
 
 const asyncHandler = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch((error) => {
