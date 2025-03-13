@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   MapPin,
@@ -29,10 +29,21 @@ import {
 import { motion } from "framer-motion";
 import { AuthContext } from "@/context/AuthContext";
 import { useContext } from "react";
+import toast from "@/components/custom/toast";
+
 
 const JobCategoriesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("IT Jobs");
   const {user} = useContext(AuthContext);
+  
+  useEffect(() => {
+    if(user){
+      toast.success("Welcome " + user.firstName)
+      setTimeout(() => {
+        toast.info("Please Visit your Profile to update your details");
+      }, 3000);
+    }
+  }, [user])
 
   console.log(user)
 

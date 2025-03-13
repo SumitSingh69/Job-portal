@@ -8,7 +8,8 @@ export const AuthProvider = ({ children }) => {
     const [refreshToken, setRefreshToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     
-    // Load stored user and tokens from localStorage (persists after refresh)
+    const API_BASE_URL = "http://localhost:4000/api";
+    
     useEffect(() => {
         const init = async () => {
             try {
@@ -38,28 +39,106 @@ export const AuthProvider = ({ children }) => {
         init();
     }, []);
     
-    // Function to log in and save user info & tokens
-    const login = (userData, accessToken, userRefreshToken = null) => {
-        setUser(userData);
-        setToken(accessToken);
-        
-        localStorage.setItem("user", JSON.stringify(userData));
-        localStorage.setItem("token", accessToken);
-        
-        if (userRefreshToken) {
-            setRefreshToken(userRefreshToken);
-            localStorage.setItem("refreshToken", userRefreshToken);
+    // Login function that uses fetch API directly
+    const login = async (email, password) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
+            }
+            
+            const data = await response.json();
+            
+            // Set state
+            setUser(data.user);
+            setToken(data.accessToken);
+            
+            if (data.refreshToken) {
+                setRefreshToken(data.refreshToken);
+                localStorage.setItem("refreshToken", data.refreshToken);
+            }
+            
+            // Store in localStorage
+            localStorage.setItem("user", JSON.stringify(data.user));
+            localStorage.setItem("token", data.accessToken);
+            
+            return data;
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
         }
     };
     
-    // Function to update just the access token
+    // Sign up function
+    const signup = async (userData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/signup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                // console.log("errorData" , errorData)
+                throw new Error(errorData?.message || 'Signup failed');
+                // return errorData?.message;
+            }
+            
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Signup failed:', error);
+            throw error;
+        }
+    };
+    
     const updateToken = (newAccessToken) => {
         setToken(newAccessToken);
         localStorage.setItem("token", newAccessToken);
     };
     
+    // Function to refresh token
+    const refreshAccessToken = async () => {
+        if (!refreshToken) {
+            throw new Error("No refresh token available");
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/refresh-token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refreshToken }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Token refresh failed');
+            }
+            
+            const data = await response.json();
+            updateToken(data.accessToken);
+            return data.accessToken;
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            logout();
+            throw error;
+        }
+    };
+    
     // Function to log out
-    const logout = () => {
+    const logout = async () => {
         setUser(null);
         setToken(null);
         setRefreshToken(null);
@@ -69,15 +148,17 @@ export const AuthProvider = ({ children }) => {
     };
     
     return (
-        <AuthContext.Provider value={{ 
-            user, 
-            token, 
+        <AuthContext.Provider value={{
+            user,
+            token,
             refreshToken,
             isLoading,
             isAuthenticated: !!user,
-            login, 
+            login,
+            signup,
             logout,
-            updateToken
+            updateToken,
+            refreshAccessToken
         }}>
             {children}
         </AuthContext.Provider>

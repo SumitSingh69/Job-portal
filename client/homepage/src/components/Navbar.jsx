@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import About from "./About";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
@@ -15,13 +15,29 @@ import {
   LogOut,
   Bell,
 } from "lucide-react";
-import { AuthContext } from "@/context/AuthContext";
+import { AuthContext } from "@/context/authContext";
+import useAxios from "@/hooks/useAxios";
+import toast from "@/components/custom/toast";
+
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const location = useLocation();
-  const {user} = useContext(AuthContext);
+  const {user, logout} = useContext(AuthContext);
+  const axios = useAxios();
+
+  const logoutUser = async () => {
+    try {
+      const response = await axios.post("/user/logout");
+      return response.data;
+    } catch (error) {
+      console.error("Logout Error:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
+  const navigate = useNavigate();
   
   const isLoggedIn = !!user?.id;
 
@@ -65,10 +81,14 @@ const Navbar = () => {
     tap: { scale: 0.95 },
   };
 
-  const handleLogout = () => {
-    // Implement your logout functionality here
-    console.log("Logging out...");
-    // After logout, close the profile dropdown
+  const handleLogout = async () => {
+
+    const response = await logoutUser();
+    if(response.success){
+      toast.success(response.message);
+      await logout();
+      navigate("/login");
+    }
     setIsProfileOpen(false);
   };
 
