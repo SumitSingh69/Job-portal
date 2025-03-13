@@ -3,12 +3,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/connect.js";
-import indexRouter from "./routes/routes.js";
+import indexRouter from "./routes/user.routes.js";
 import session from "express-session";
-import asyncHandler from "./middleware/asyncHandler.js";
 import ErrorHandler from "./middleware/ErrorHandler.js";
-
-
+import companyRouter from "./routes/company.routes.js";
+import jobRouter from "./routes/jobs.routes.js";
 dotenv.config();
 
 const app = express();
@@ -48,11 +47,13 @@ app.get('/', (async (req, res) => {
     });
 }));
 
+
 app.use(ErrorHandler);
 
 
 app.use('/api', indexRouter);
-
+app.use('/api', companyRouter);
+app.use('/api', jobRouter);
 
 connectDB().then(() => {
     app.listen(PORT, () => {

@@ -3,30 +3,38 @@ import asyncHandler from "./asyncHandler.js";
 import User from "../model/user.Model.js";
 import { HTTPSTATUS } from "../config/https.config.js";
 
-export const verifyAccessToken = asyncHandler(
-  async (req, res, next) => {
-    try {
-        console.log("first")
-        const accessToken = req.cookies?.accessToken || req.headers?.authorization?.split(" ")[1];
-        if (!accessToken) {
-          return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: "Unauthorized" });
-        }
-    
-        jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET, async (err, decoded) => {
-          if (err) {
-            return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: "Unauthorized" });
-          }
-    
-          const user = await User.findById(decoded?.userId);
-          if (!user) {
-            return res.status(HTTPSTATUS.UNAUTHORIZED).json({ message: "Unauthorized" });
-          }
-    
-          req.user = user;
-          next();
-        });
-    } catch (error) {
-        next(error)
+export const verifyAccessToken = asyncHandler(async (req, res, next) => {
+  try {
+    const accessToken =
+      req.cookies?.accessToken || req.headers?.authorization?.split(" ")[1];
+    if (!accessToken) {
+      return res
+        .status(HTTPSTATUS.UNAUTHORIZED)
+        .json({ message: "Unauthorized" });
     }
+
+    jwt.verify(
+      accessToken,
+      process.env.JWT_ACCESS_SECRET,
+      async (err, decoded) => {
+        if (err) {
+          return res
+            .status(HTTPSTATUS.UNAUTHORIZED)
+            .json({ message: "Unauthorized" });
+        }
+
+        const user = await User.findById(decoded?.userId);
+        if (!user) {
+          return res
+            .status(HTTPSTATUS.UNAUTHORIZED)
+            .json({ message: "Unauthorized" });
+        }
+
+        req.user = user;
+        next();
+      }
+    );
+  } catch (error) {
+    next(error);
   }
-);
+});

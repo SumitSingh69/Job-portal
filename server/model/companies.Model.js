@@ -1,90 +1,96 @@
 import mongoose from "mongoose";
 
-const companiesSchema = new mongoose.Schema({
-  // Basic Information
-  name: {
-    type: String,
-    required: true,
-  },
-  industry: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  
-  // Company Details
-  companyType: {
-    type: String,
-    required: true,
-  },
-  founder: {
-    type: String,
-    required: true,
-  },
-  founded: {
-    type: Date,
-    required: true,
-  },
+const companiesSchema = new mongoose.Schema(
+  {
+    // Basic Information
+    name: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    industry: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
 
-  // Location
-  location: {
-    type: String,
-    required: true,
-  },
-  headquarter: {
-    type: [String],
-    required: true,
-  },
+    // Company Details
+    companyType: {
+      type: String,
+      required: true,
+    },
+    founder: {
+      type: String,
+      required: true,
+    },
+    founded: {
+      type: Date,
+      required: true,
+    },
 
-  // Contact Information
-  contact_email: {
-    type: String,
-    required: true,
-  },
-  contact_phone: {
-    type: String,
-    required: true,
-    match: [/^\+?[1-9]\d{1,14}$/, 'Please provide a valid phone number'],
-  },
+    // Location
+    location: {
+      type: String,
+      required: true,
+    },
+    headquarter: {
+      type: [String],
+      required: true,
+    },
 
-  // Media
-  website: {
-    type: String,
-    required: true,
-  },
-  logo: {
-    type: String,
-    required: true,
-  },
+    // Contact Information
+    contact_email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    contact_phone: {
+      type: String,
+      required: true,
+      match: [/^\+?[1-9]\d{1,14}$/, "Please provide a valid phone number"],
+    },
 
-  // Company Size
-  size: {
-    type: String,
-    required: true,
-    enum: ["small", "medium", "large"],
-  },
+    // Media
+    website: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    logo: {
+      type: String,
+      required: true,
+    },
 
-  // Timestamps
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now,
-  },
-});
+    // Company Size
+    size: {
+      type: String,
+      required: true,
+      enum: ["small", "medium", "large"],
+    },
 
-// Update `updated_at` field when the document is modified
-companiesSchema.pre('save', function(next) {
-  if (this.isModified()) {
-    this.updated_at = Date.now();
-  }
-  next();
-});
+    // Created By (Reference to User who created this company)
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    status: {
+      type: String,
+      required: true,
+      default: "active",
+      enum: ["active", "inactive"],
+    },
+  },
+  { timestamps: true }
+);
+
+companiesSchema.index({ id: 1 }, { unique: true, sparse: true });
+
+companiesSchema.index({ name: 1, website: 1 }, { unique: true });
 
 const Companies = mongoose.model("Companies", companiesSchema);
 export default Companies;

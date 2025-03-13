@@ -2,7 +2,6 @@ import User from "../model/user.Model.js";
 import { z } from "zod";
 import { HTTPSTATUS } from "../config/https.config.js";
 import { signUpSchema, loginSchema } from "../validation/auth.validation.js";
-import asyncHandler from "../middleware/asyncHandler.js";
 import jwt from "jsonwebtoken";
 
 // Utility function to generate tokens for a user
@@ -179,6 +178,65 @@ export const logout = async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(HTTPSTATUS.BAD_REQUEST).json({ errors: error.errors });
     }
+    next(error);
+  }
+};
+
+export const userProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user).select(
+      "-password -refreshToken"
+    );
+    console.log(user);
+    if (!user) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "User not found",
+      });
+    }
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "User profile fetched successfully",
+      user,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUser = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, phonenumber } = req.body;
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+      firstName,
+      lastName,
+      email,
+      phonenumber,
+    }, { new: true });
+
+    if (!user) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "User not found",
+      });
+    }
+
+    const updatedUser = await User.findById(req.user?._id).select(
+      "-password -refreshToken"
+    );
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "User updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
     next(error);
   }
 };

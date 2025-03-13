@@ -1,166 +1,164 @@
-import Jobs from '../model/jobs.Model.js';
-import { mongoose } from 'mongoose';
-// import { isRecuriter,isAuthenticated } from '../middleware/auth.js';
+import { HTTPSTATUS } from "../config/https.config.js";
+import Job from "../model/jobs.Model.js";
+
+export const createJob = async (req, res, next) => {
+  try {
+    const body = req.body;
+
+    const job = await Job.create({
+      ...body,
+      createdBy: req.user._id,
+    });
+
+    res.status(HTTPSTATUS.CREATED).json({
+      success: true,
+      status: HTTPSTATUS.CREATED,
+      message: "Job created successfully",
+      job: job,
+    });
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        status: HTTPSTATUS.BAD_REQUEST,
+        message: "Validation error",
+        errors: Object.values(error.errors).map((err) => err.message),
+      });
+    }
+    next(error);
+  }
+};
 
 export const getJobById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const job = await Jobs.findById(id);
-
+    const job = await Job.findById(req.params.id);
     if (!job) {
-      return res.status(404).json({ message: "Job not found" });
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "Job not found",
+      });
     }
 
-    res.status(200).json(job);
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Job found",
+      job,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    next(error);
   }
 };
 
 export const getAllJobs = async (req, res, next) => {
   try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      sort = "createdAt", 
+      order = "desc",
+      title,
+      city,
+      state,
+      country,
+      minSalary,
+      maxSalary,
+      status,
+      companyId
+    } = req.query;
     
-    const jobs = await Jobs.find();
-
-    if (jobs.length === 0) {
-      return res.status(404).json({ message: "No jobs found" });
+    // Build filters object
+    const filters = {};
+    
+    // Text search for title
+    if(title) {
+      filters.title = { $regex: title, $options: "i" };
     }
-    res.status(200).json(jobs);
-  } catch (error) {
-    console.error("Get all jobs error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
+    
+    // Location filtering - match nested properties correctly
+    if(city) {
+      filters["location.city"] = { $regex: city, $options: "i" };
+    }
+    
+    if(state) {
+      filters["location.state"] = { $regex: state, $options: "i" };
+    }
+    
+    if(country) {
+      filters["location.country"] = { $regex: country, $options: "i" };
+    }
+    
+    // Company filtering
+    if(companyId) {
+      filters.companyId = companyId;
+    }
+    
+    // Salary range filtering
+    if(minSalary) {
+      filters.max_salary = { $gte: parseInt(minSalary) };
+    }
+    
+    if(maxSalary) {
+      filters.min_salary = { $lte: parseInt(maxSalary) };
+    }
+    
+    // Status filtering
+    if(status) {
+      filters.status = status;
+    }
+    
+    // Build sort object
+    const sortOptions = {};
+    sortOptions[sort] = order === "asc" ? 1 : -1;
+    
+    // Execute query with pagination
+    const jobs = await Job.find(filters)
+      .sort(sortOptions)
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate("createdBy", "name email")
+      .populate("companyId", "name logo");
+    
+    const totalJobs = await Job.countDocuments(filters);
+    
+    // Return response
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Jobs retrieved successfully",
+      jobs,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(totalJobs / parseInt(limit)),
+        totalJobs
+      }
     });
-  }
-};
-
-export const searchJobs = async (req, res, next) => {
-  try {
-    console.log("Query Parameters: ", req.query); // Debugging line
-
-    const { title, location, companyId, status, min_salary, max_salary, postedDate, applicationDeadline } = req.query;
-    let searchQuery = {};
-
-    if (title) {
-      searchQuery.title = { $regex: title, $options: "i" };
-    }
-    if (location) {
-      searchQuery.location = { $regex: location, $options: "i" };
-    }
-    if (companyId) {
-      searchQuery.companyId = companyId;
-    }
-    if (status) {
-      searchQuery.status = status;
-    }
-    if (min_salary || max_salary) {
-      searchQuery.min_salary = { $gte: min_salary || 0 };
-      searchQuery.max_salary = { $lte: max_salary || Infinity };
-    }
-    if (postedDate) {
-      searchQuery.postedDate = { $gte: new Date(postedDate) };
-    }
-    if (applicationDeadline) {
-      searchQuery.applicationDeadline = { $lte: new Date(applicationDeadline) };
-    }
-
-    const jobs = await Jobs.find(searchQuery);
-
-    if (jobs.length === 0) {
-      return res.status(404).json({ message: "No jobs found" });
-    }
-
-    res.status(200).json({ jobs });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error", error: error.message });
+    next(error);
   }
 };
 
-
-
-export const createJob = [async (req, res, next) => {
-
+export const updateJob = async (req, res, next) => {
   try {
-    const {
-      employer_id, title, location, description, companyId, status, min_salary, max_salary, postedDate, applicationDeadline, requirement =[],
-    } = req.body;
-
-    if (!employer_id || !title || !location || !companyId || !description ||!postedDate) {
-      return res.status(400).json({
-        message: "title, location, companyId, and postedDate are required",
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "Job not found",
       });
     }
 
-    const jobPostedDate = postedDate ? new Date(postedDate) : new Date();
-    const newJob = new Jobs({
-      employer_id,
-      title,
-      location,
-      companyId,
-      description,
-      status,
-      requirement,
-      min_salary,
-      max_salary,
-      postedDate: jobPostedDate,
-      applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
-    });
+    await Job.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
-    const savedJob = await newJob.save();
-    res.status(201).json({
-      message: "Job created successfully",
-      job: savedJob,
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Job updated successfully",
     });
   } catch (error) {
-    console.error("Job not created", error);
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    next(error);
   }
-}];
-
-export const updateJob = [async (req, res, next) => {
-  try {
- 
-    const { id } = req.params;
-    const updateData = req.body;
-    
-
-    const updatedJob = await Jobs.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatedJob) {
-      return res.status(404).json({ message: 'Job not found' });
-    }
-    res.status(200).json({ message: 'Job updated successfully', job: updatedJob });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
-    }
-    console.error("Update job error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-}];
-
-export const deleteJob = [async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid job ID" });
-    }
-
-    const deletedJob = await Jobs.findByIdAndDelete(id);
-    if (!deletedJob) {
-      return res.status(404).json({ message: 'No Job found' });
-    }
-    res.status(200).json({ message: 'Job deleted successfully'});
-  } catch (error) {
-    console.error("Error in Deleting Job", error);
-    res.status(500).json({ 
-      message: "Server error",
-       error: error.message });
-  }
-}];
+};
