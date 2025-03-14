@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
     // Login function that uses fetch API directly
     const login = async (email, password) => {
         try {
+            setIsLoading(true);
             const response = await fetch(`${API_BASE_URL}/user/login`, {
                 method: 'POST',
                 headers: {
@@ -83,12 +84,15 @@ export const AuthProvider = ({ children }) => {
                 success: false,
                 message: "Server error. Please try again later."
             };
+        } finally {
+            setIsLoading(false);
         }
     };
     
     // Sign up function
     const signup = async (userData) => {
         try {
+            setIsLoading(true);
             const response = await fetch(`${API_BASE_URL}/user/signup`, {
                 method: 'POST',
                 headers: {
@@ -117,6 +121,8 @@ export const AuthProvider = ({ children }) => {
                 success: false,
                 message: "Server error. Please try again later."
             };
+        } finally {
+            setIsLoading(false);
         }
     };
     
@@ -127,7 +133,9 @@ export const AuthProvider = ({ children }) => {
     
     // Function to refresh token
     const refreshAccessToken = async () => {
-        if (!refreshToken) {
+        const currentRefreshToken = refreshToken || localStorage.getItem("refreshToken");
+        
+        if (!currentRefreshToken) {
             return {
                 success: false,
                 message: "No refresh token available"
@@ -135,17 +143,20 @@ export const AuthProvider = ({ children }) => {
         }
         
         try {
+            setIsLoading(true);
             const response = await fetch(`${API_BASE_URL}/user/refresh-token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ refreshToken }),
+                body: JSON.stringify({ refreshToken: currentRefreshToken }),
             });
             
             const data = await response.json();
             
             if (!response.ok) {
+                // If refresh fails, logout the user
+                logout();
                 return {
                     success: false,
                     message: data.message || 'Token refresh failed'
@@ -164,11 +175,13 @@ export const AuthProvider = ({ children }) => {
                 success: false,
                 message: "Server error. Please try again later."
             };
+        } finally {
+            setIsLoading(false);
         }
     };
     
     // Function to log out
-    const logout = async () => {
+    const logout = () => {
         setUser(null);
         setToken(null);
         setRefreshToken(null);
