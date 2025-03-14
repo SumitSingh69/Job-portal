@@ -40,7 +40,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   
   const isLoggedIn = !!user?.id;
-
+  console.log(user)
   const navItems = [
     { path: "/", text: "Home", icon: <Home size={20} /> },
     { path: "/jobs", text: "Jobs", icon: <Briefcase size={20} /> },
@@ -149,15 +149,7 @@ const Navbar = () => {
               {isLoggedIn ? (
                 <div className="flex items-center space-x-4">
                   {/* Notifications */}
-                  <motion.div
-                    whileHover="hover"
-                    whileTap="tap"
-                    variants={linkVariants}
-                  >
-                    <Link to="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600">
-                      <Bell size={20} />
-                    </Link>
-                  </motion.div>
+                  {user.role === 'jobseeker' ? "hello" : null}
                   
                   {/* User Profile Dropdown */}
                   <div className="relative">

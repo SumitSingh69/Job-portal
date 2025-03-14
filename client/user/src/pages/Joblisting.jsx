@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Search,
   X,
@@ -16,6 +16,10 @@ import {
   ArrowRight,
 } from "lucide-react";
 import JobFilters from "./JobFilters";
+import useAxios from "@/hooks/useAxios";
+import { AuthContext } from "@/context/authContext";
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 const JobBoard = () => {
   const [selectedTags, setSelectedTags] = useState([]);
@@ -24,13 +28,17 @@ const JobBoard = () => {
   const [searchLocation, setSearchLocation] = useState("");
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
     totalPages: 1,
-    totalJobs: 0
+    totalJobs: 0,
   });
+  const { isLoading: authLoading } = useContext(AuthContext);
+  const axios = useAxios();
+  const [currJobs, setCurrJobs] = useState([]);
 
   // Mock data to simulate API response
   const mockJobsData = {
@@ -41,17 +49,18 @@ const JobBoard = () => {
       {
         _id: "job1",
         title: "Senior UX Designer",
-        description: "We are looking for a talented UX Designer to join our team.",
+        description:
+          "We are looking for a talented UX Designer to join our team.",
         companyId: {
           _id: "company1",
           name: "Design Magic",
-          logo: "/api/placeholder/48/48"
+          logo: "/api/placeholder/48/48",
         },
         postedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
         location: {
           city: "San Francisco",
           state: "CA",
-          country: "USA"
+          country: "USA",
         },
         requirement: ["Figma", "UI Design", "User Research"],
         applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -60,8 +69,8 @@ const JobBoard = () => {
         status: "open",
         createdBy: {
           name: "John Recruiter",
-          email: "john@designmagic.com"
-        }
+          email: "john@designmagic.com",
+        },
       },
       {
         _id: "job2",
@@ -70,13 +79,13 @@ const JobBoard = () => {
         companyId: {
           _id: "company2",
           name: "Tech Innovate",
-          logo: "/api/placeholder/48/48"
+          logo: "/api/placeholder/48/48",
         },
         postedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
         location: {
           city: "New York",
           state: "NY",
-          country: "USA"
+          country: "USA",
         },
         requirement: ["Product Design", "Prototyping", "Sketch"],
         applicationDeadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
@@ -85,8 +94,8 @@ const JobBoard = () => {
         status: "open",
         createdBy: {
           name: "Sarah Manager",
-          email: "sarah@techinnovate.com"
-        }
+          email: "sarah@techinnovate.com",
+        },
       },
       {
         _id: "job3",
@@ -95,13 +104,13 @@ const JobBoard = () => {
         companyId: {
           _id: "company3",
           name: "Creative Solutions",
-          logo: "/api/placeholder/48/48"
+          logo: "/api/placeholder/48/48",
         },
         postedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
         location: {
           city: "Remote",
           state: "Any",
-          country: "Any"
+          country: "Any",
         },
         requirement: ["UI Design", "Wireframing", "Adobe XD"],
         applicationDeadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
@@ -110,30 +119,90 @@ const JobBoard = () => {
         status: "open",
         createdBy: {
           name: "Alex Creative",
-          email: "alex@creativesolutions.com"
-        }
-      }
+          email: "alex@creativesolutions.com",
+        },
+      },
     ],
     pagination: {
       currentPage: 1,
       pageSize: 10,
       totalPages: 1,
-      totalJobs: 3
-    }
+      totalJobs: 3,
+    },
   };
-
+  // const baseUrl = process.env.VITE_BASE_URL;
   // Simulate API fetch
   useEffect(() => {
     // In a real implementation, you would call your API here
     // Simulating API call with mock data
-    setTimeout(() => {
-      setJobs(mockJobsData.jobs);
-      setFilteredJobs(mockJobsData.jobs);
-      setPagination(mockJobsData.pagination);
-      setLoading(false);
-    }, 500);
-  }, []);
+    const func = async () => {
+      try {
+        setLoading(true);
+        const tempData = await axios.get("/jobs");
+        const jobsData = tempData.data;
+        console.log(jobsData);
+        if (jobsData.success && jobsData.jobs) {
+          setJobs(jobsData.jobs);
+          setFilteredJobs(
+            jobsData.jobs.filter((job) => job.isDelete !== "Yes")
+          );
+          setPagination(jobsData.pagination);
+        }
+      } catch (e) {
+        console.error("Error fetching data", e);
+        setError("hello ji");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (!authLoading) func();
+    // setTimeout(() => {
+    //   setJobs(mockJobsData.jobs);
+    //   setFilteredJobs(mockJobsData.jobs);
+    //   setPagination(mockJobsData.pagination);
+    //   setLoading(false);
+    // }, 500);
+  }, [authLoading, axios]);
+  const displaySkills = (requirements) => {
+    if (!requirements || !Array.isArray(requirements)) return [];
+    return requirements
+      .filter((req) => !req.toLowerCase().includes("year"))
+      .map((req) => {
+        const skills = [
+          "react",
+          "node",
+          "next",
+          "c++",
+          "c#",
+          "java",
+          "aws",
+          "aws",
+          "js",
+          "docker",
+          "express",
+        ];
+        for (const skill of skills) {
+          if (req.toLowerCase().includes(skill)) {
+            return skill.charAt(0).toUpperCase() + skill.slice(1);
+          }
+        }
+        const word = req.split(" ");
+        if (word.length > 3) return word.slice(0, 2).join(" ");
+        return req;
+      }).filter(Boolean).slice(0,3);
 
+
+  };
+  const getCompanyLogo = (job) => {
+    if (job.companyId && job.companyId.logo) return job.companyId.logo;
+
+    return "/api/placeholder/48/48";
+  };
+  const getCompanyName = (job) => {
+    if (job.companyId && job.companyId.name) return job.companyId.name;
+    return "Unknown Company";
+  };
+  console.log("currJobs", currJobs);
   const handleRemoveTag = (indexToRemove) => {
     setSelectedTags(selectedTags.filter((_, index) => index !== indexToRemove));
   };
@@ -141,18 +210,24 @@ const JobBoard = () => {
   const handleSearch = () => {
     // This would trigger an API call in a real implementation
     // For now, we'll just filter the mock data
-    const filtered = jobs.filter(job => {
-      const titleMatch = searchTitle ? 
-        job.title.toLowerCase().includes(searchTitle.toLowerCase()) : true;
-      
-      const locationMatch = searchLocation ? 
-        (job.location.country.toLowerCase().includes(searchLocation.toLowerCase()) ||
-        job.location.state.toLowerCase().includes(searchLocation.toLowerCase()) ||
-        job.location.city.toLowerCase().includes(searchLocation.toLowerCase())) : true;
-      
+    const filtered = jobs.filter((job) => {
+      const titleMatch = searchTitle
+        ? job.title.toLowerCase().includes(searchTitle.toLowerCase())
+        : true;
+
+      const locationMatch = searchLocation
+        ? job.location.country
+            .toLowerCase()
+            .includes(searchLocation.toLowerCase()) ||
+          job.location.state
+            .toLowerCase()
+            .includes(searchLocation.toLowerCase()) ||
+          job.location.city.toLowerCase().includes(searchLocation.toLowerCase())
+        : true;
+
       return titleMatch && locationMatch;
     });
-    
+
     setFilteredJobs(filtered);
   };
 
@@ -165,13 +240,12 @@ const JobBoard = () => {
     // For now, we'll filter the mock data
     const filtered = jobs.filter((job) => {
       // Salary filtering
-      const salaryMatch = 
-        job.min_salary <= salaryRange.max && 
-        job.max_salary >= salaryRange.min;
+      const salaryMatch =
+        job.min_salary <= salaryRange.max && job.max_salary >= salaryRange.min;
 
       // For simplicity, we're not implementing all filters with the mock data
       // In a real application, you would pass these filters to your API
-      
+
       return salaryMatch;
     });
 
@@ -180,7 +254,7 @@ const JobBoard = () => {
 
   // Format salary from number to string with k format
   const formatSalary = (salary) => {
-    return `$${Math.round(salary/1000)}k`;
+    return `$${Math.round(salary / 1000)}k`;
   };
 
   // Calculate days since posted
@@ -214,7 +288,7 @@ const JobBoard = () => {
               </div>
               <div className="flex-1 min-w-[200px] flex items-center gap-2 border-r border-gray-200 pr-4">
                 <MapPin className="text-gray-400" />
-                <select 
+                <select
                   className="w-full outline-none text-gray-900 bg-transparent"
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
@@ -225,7 +299,7 @@ const JobBoard = () => {
                   <option value="Canada">Canada</option>
                 </select>
               </div>
-              <button 
+              <button
                 className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                 onClick={handleSearch}
               >
@@ -260,7 +334,6 @@ const JobBoard = () => {
         )}
 
         <div className="flex gap-6">
-   
           <JobFilters
             isOpen={isFiltersOpen}
             onClose={() => setIsFiltersOpen(false)}
@@ -280,10 +353,20 @@ const JobBoard = () => {
               </select>
             </div>
 
-            {loading ? (
+            {authLoading ? (
               <div className="text-center py-10">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
-                <p className="mt-2 text-gray-600">Loading jobs...</p>
+                <p className="mt-2 text-gray-600">initialising jobs...</p>
+              </div>
+            ) : loading ? (
+              <div className="text-center py-10">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+                <p className="mt-2 text-gray-600">loading jobs...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-10">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+                <p className="mt-2 text-gray-600">error in loading jobs...</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -296,8 +379,8 @@ const JobBoard = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex gap-4">
                           <img
-                            src={job.companyId.logo}
-                            alt={`${job.companyId.name} logo`}
+                            src={getCompanyLogo(job)}
+                            alt={`${getCompanyName(job)} logo`}
                             className="w-12 h-12 rounded-lg object-contain bg-gray-50"
                           />
                           <div>
@@ -305,7 +388,7 @@ const JobBoard = () => {
                               {job.title}
                             </h3>
                             <p className="text-blue-600 font-medium">
-                              {job.companyId.name}
+                              {getCompanyName(job)}
                             </p>
                           </div>
                         </div>
@@ -320,11 +403,11 @@ const JobBoard = () => {
                             Open
                           </span>
                         )}
-                        {job.location.city === "Remote" && (
+                        {/* {job.location.city === "Remote" && (
                           <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">
                             Remote
                           </span>
-                        )}
+                        )} */}
                       </div>
 
                       <div className="space-y-3 mb-4">
@@ -338,12 +421,16 @@ const JobBoard = () => {
                         </div>
                         <div className="flex items-center text-gray-600">
                           <DollarSign className="mr-2 text-blue-500 w-5 h-5" />
-                          <span>{`${formatSalary(job.min_salary)} - ${formatSalary(job.max_salary)}`}</span>
+                          <span>{`${formatSalary(
+                            job.min_salary
+                          )} - ${formatSalary(job.max_salary)}`}</span>
                         </div>
                       </div>
-
+                      <div className="text-gray-700 text-sm mb-4 line-clamp-2">
+                        {job.description}
+                      </div>
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {job.requirement.slice(0, 3).map((skill) => (
+                        {displaySkills(job.requirement).map((skill) => (
                           <span
                             key={skill}
                             className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm"
@@ -369,10 +456,12 @@ const JobBoard = () => {
               </div>
             )}
 
-            {filteredJobs.length === 0 && !loading && (
+            {currJobs.length === 0 && !loading && (
               <div className="text-center py-10 bg-white rounded-xl shadow p-6">
                 <div className="text-gray-500 text-lg mb-2">No jobs found</div>
-                <p className="text-gray-400">Try adjusting your search filters</p>
+                <p className="text-gray-400">
+                  Try adjusting your search filters
+                </p>
               </div>
             )}
 
@@ -382,7 +471,6 @@ const JobBoard = () => {
             >
               <Filter className="w-6 h-6" />
             </button>
-            
           </div>
         </div>
       </div>
