@@ -2,20 +2,16 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 
 const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
-  const [employmentTypes, setEmploymentTypes] = useState({
-    fullTime: false,
-    partTime: true,
-    remote: true,
-    training: false,
+  // Initialize state based on backend filter parameters
+  const [status, setStatus] = useState({
+    open: true,
+    closed: false
   });
 
-  const [seniorityLevels, setSeniorityLevels] = useState({
-    student: true,
-    entry: true,
-    mid: false,
-    senior: false,
-    director: false,
-    vp: false,
+  const [location, setLocation] = useState({
+    city: "",
+    state: "",
+    country: ""
   });
 
   const [salaryRange, setSalaryRange] = useState({
@@ -24,56 +20,55 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
     current: [10000, 500000],
   });
 
-  const handleEmploymentTypeChange = (type) => {
-    setEmploymentTypes((prev) => {
+  // Handle status change
+  const handleStatusChange = (type) => {
+    setStatus((prev) => {
       const updated = { ...prev, [type]: !prev[type] };
       onFiltersChange?.({
-        employmentTypes: updated,
-        seniorityLevels,
+        status: updated,
+        location,
         salaryRange,
       });
       return updated;
     });
   };
 
-  const handleSeniorityChange = (level) => {
-    setSeniorityLevels((prev) => {
-      const updated = { ...prev, [level]: !prev[level] };
+  // Handle location change
+  const handleLocationChange = (field, value) => {
+    setLocation((prev) => {
+      const updated = { ...prev, [field]: value };
       onFiltersChange?.({
-        employmentTypes,
-        seniorityLevels: updated,
+        status,
+        location: updated,
         salaryRange,
       });
       return updated;
     });
   };
 
+  // Handle salary range change
   const handleSalaryChange = (type, value) => {
     setSalaryRange((prev) => {
       const updated = { ...prev, [type]: parseInt(value) || 0 };
       onFiltersChange?.({
-        employmentTypes,
-        seniorityLevels,
+        status,
+        location,
         salaryRange: updated,
       });
       return updated;
     });
   };
 
+  // Reset all filters
   const handleReset = () => {
-    setEmploymentTypes({
-      fullTime: false,
-      partTime: false,
-      remote: false,
-      training: false,
+    setStatus({
+      open: true,
+      closed: false
     });
-    setSeniorityLevels({
-      student: false,
-      entry: false,
-      mid: false,
-      senior: false,
-      director: false,
-      vp: false,
+    setLocation({
+      city: "",
+      state: "",
+      country: ""
     });
     setSalaryRange({
       min: 10000,
@@ -81,8 +76,8 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
       current: [10000, 500000],
     });
     onFiltersChange?.({
-      employmentTypes: {},
-      seniorityLevels: {},
+      status: { open: true, closed: false },
+      location: { city: "", state: "", country: "" },
       salaryRange: { min: 10000, max: 500000, current: [10000, 500000] },
     });
   };
@@ -105,9 +100,11 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
         />
         <span className="ml-2 text-gray-700">{label}</span>
       </div>
-      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-        {count}
-      </span>
+      {count && (
+        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          {count}
+        </span>
+      )}
     </label>
   );
 
@@ -142,67 +139,55 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto">
-            <FilterSection title="Type of Employment">
+            <FilterSection title="Job Status">
               <div className="space-y-2">
                 <Checkbox
-                  label="Full Time Job"
-                  checked={employmentTypes.fullTime}
-                  onChange={() => handleEmploymentTypeChange("fullTime")}
-                  count="159"
+                  label="Open Positions"
+                  checked={status.open}
+                  onChange={() => handleStatusChange("open")}
+                  count="145"
                 />
                 <Checkbox
-                  label="Part Time Job"
-                  checked={employmentTypes.partTime}
-                  onChange={() => handleEmploymentTypeChange("partTime")}
-                  count="38"
-                />
-                <Checkbox
-                  label="Remote Job"
-                  checked={employmentTypes.remote}
-                  onChange={() => handleEmploymentTypeChange("remote")}
-                  count="50"
-                />
-                <Checkbox
-                  label="Training Job"
-                  checked={employmentTypes.training}
-                  onChange={() => handleEmploymentTypeChange("training")}
-                  count="15"
+                  label="Closed Positions"
+                  checked={status.closed}
+                  onChange={() => handleStatusChange("closed")}
+                  count="32"
                 />
               </div>
             </FilterSection>
 
-            <FilterSection title="Seniority Level">
-              <div className="space-y-2">
-                <Checkbox
-                  label="Student Level"
-                  checked={seniorityLevels.student}
-                  onChange={() => handleSeniorityChange("student")}
-                  count="48"
-                />
-                <Checkbox
-                  label="Entry Level"
-                  checked={seniorityLevels.entry}
-                  onChange={() => handleSeniorityChange("entry")}
-                  count="51"
-                />
-                <Checkbox
-                  label="Senior Level"
-                  checked={seniorityLevels.senior}
-                  onChange={() => handleSeniorityChange("senior")}
-                  count="150"
-                />
-                <Checkbox
-                  label="Director Level"
-                  checked={seniorityLevels.director}
-                  onChange={() => handleSeniorityChange("director")}
-                  count="20"
-                />
-                <Checkbox
-                  label="VP or Above"
-                  checked={seniorityLevels.vp}
-                  onChange={() => handleSeniorityChange("vp")}
-                  count="15"
-                />
+            <FilterSection title="Location">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={location.city}
+                    onChange={(e) => handleLocationChange("city", e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Any city"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={location.state}
+                    onChange={(e) => handleLocationChange("state", e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Any state"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={location.country}
+                    onChange={(e) => handleLocationChange("country", e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Any country"
+                  />
+                </div>
               </div>
             </FilterSection>
 
@@ -247,8 +232,8 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
               <button
                 onClick={() => {
                   onFiltersChange?.({
-                    employmentTypes,
-                    seniorityLevels,
+                    status,
+                    location,
                     salaryRange,
                   });
                   onClose?.();

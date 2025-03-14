@@ -50,12 +50,14 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ email, password }),
             });
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Login failed');
-            }
-            
             const data = await response.json();
+            
+            if (!response.ok) {
+                return {
+                    success: false,
+                    message: data.message || 'Invalid email or password'
+                };
+            }
             
             // Set state
             setUser(data.user);
@@ -70,10 +72,17 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("user", JSON.stringify(data.user));
             localStorage.setItem("token", data.accessToken);
             
-            return data;
+            return {
+                success: true,
+                message: "Logged in successfully",
+                user: data.user
+            };
         } catch (error) {
             console.error('Login failed:', error);
-            throw error;
+            return {
+                success: false,
+                message: "Server error. Please try again later."
+            };
         }
     };
     
@@ -88,18 +97,26 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify(userData),
             });
             
+            const data = await response.json();
+            
             if (!response.ok) {
-                const errorData = await response.json();
-                // console.log("errorData" , errorData)
-                throw new Error(errorData?.message || 'Signup failed');
-                // return errorData?.message;
+                return {
+                    success: false,
+                    message: data.message || 'Signup failed'
+                };
             }
             
-            const data = await response.json();
-            return data;
+            return {
+                success: true,
+                message: "Signup successful",
+                data
+            };
         } catch (error) {
             console.error('Signup failed:', error);
-            throw error;
+            return {
+                success: false,
+                message: "Server error. Please try again later."
+            };
         }
     };
     
@@ -111,7 +128,10 @@ export const AuthProvider = ({ children }) => {
     // Function to refresh token
     const refreshAccessToken = async () => {
         if (!refreshToken) {
-            throw new Error("No refresh token available");
+            return {
+                success: false,
+                message: "No refresh token available"
+            };
         }
         
         try {
@@ -123,17 +143,27 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ refreshToken }),
             });
             
+            const data = await response.json();
+            
             if (!response.ok) {
-                throw new Error('Token refresh failed');
+                return {
+                    success: false,
+                    message: data.message || 'Token refresh failed'
+                };
             }
             
-            const data = await response.json();
             updateToken(data.accessToken);
-            return data.accessToken;
+            return {
+                success: true,
+                accessToken: data.accessToken
+            };
         } catch (error) {
             console.error('Token refresh failed:', error);
             logout();
-            throw error;
+            return {
+                success: false,
+                message: "Server error. Please try again later."
+            };
         }
     };
     

@@ -34,6 +34,7 @@ const Login = () => {
 
     try {
       const response = await login(formData.email, formData.password);
+      
       if (response.success) {
         toast.update(toastId, {
           render: "Logged in successfully!",
@@ -44,7 +45,7 @@ const Login = () => {
         navigate("/");
       } else {
         toast.update(toastId, {
-          render: response.message,
+          render: response.message || "Login failed",
           type: "error",
           isLoading: false,
           autoClose: 3000,
@@ -52,7 +53,12 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login failed:", error);
-      // Show error toast
+      toast.update(toastId, {
+        render: "An unexpected error occurred",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } finally {
       setLoading(false);
     }
