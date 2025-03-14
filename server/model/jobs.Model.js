@@ -92,6 +92,14 @@ const jobsSchema = new mongoose.Schema({
     enum: ["open", "closed"],
     index: true,
   },
+
+  isDelete:{
+    type : String,
+    required : true,
+    default : "No",
+    enum : ['No' , "Yes"],
+    index : true
+  }
 }, { timestamps: true });
 
 jobsSchema.index({ "location.city": 1, "location.state": 1 }); // For location-based searches

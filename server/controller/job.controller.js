@@ -53,10 +53,10 @@ export const getJobById = async (req, res, next) => {
 
 export const getAllJobs = async (req, res, next) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      sort = "createdAt", 
+    const {
+      page = 1,
+      limit = 10,
+      sort = "createdAt",
       order = "desc",
       title,
       city,
@@ -65,53 +65,53 @@ export const getAllJobs = async (req, res, next) => {
       minSalary,
       maxSalary,
       status,
-      companyId
+      companyId,
     } = req.query;
-    
+
     // Build filters object
     const filters = {};
-    
+
     // Text search for title
-    if(title) {
+    if (title) {
       filters.title = { $regex: title, $options: "i" };
     }
-    
+
     // Location filtering - match nested properties correctly
-    if(city) {
+    if (city) {
       filters["location.city"] = { $regex: city, $options: "i" };
     }
-    
-    if(state) {
+
+    if (state) {
       filters["location.state"] = { $regex: state, $options: "i" };
     }
-    
-    if(country) {
+
+    if (country) {
       filters["location.country"] = { $regex: country, $options: "i" };
     }
-    
+
     // Company filtering
-    if(companyId) {
+    if (companyId) {
       filters.companyId = companyId;
     }
-    
+
     // Salary range filtering
-    if(minSalary) {
+    if (minSalary) {
       filters.max_salary = { $gte: parseInt(minSalary) };
     }
-    
-    if(maxSalary) {
+
+    if (maxSalary) {
       filters.min_salary = { $lte: parseInt(maxSalary) };
     }
-    
+
     // Status filtering
-    if(status) {
+    if (status) {
       filters.status = status;
     }
-    
+
     // Build sort object
     const sortOptions = {};
     sortOptions[sort] = order === "asc" ? 1 : -1;
-    
+
     // Execute query with pagination
     const jobs = await Job.find(filters)
       .sort(sortOptions)
@@ -119,9 +119,9 @@ export const getAllJobs = async (req, res, next) => {
       .limit(parseInt(limit))
       .populate("createdBy", "name email")
       .populate("companyId", "name logo");
-    
+
     const totalJobs = await Job.countDocuments(filters);
-    
+
     // Return response
     res.status(HTTPSTATUS.OK).json({
       success: true,
@@ -132,8 +132,8 @@ export const getAllJobs = async (req, res, next) => {
         currentPage: parseInt(page),
         pageSize: parseInt(limit),
         totalPages: Math.ceil(totalJobs / parseInt(limit)),
-        totalJobs
-      }
+        totalJobs,
+      },
     });
   } catch (error) {
     next(error);
@@ -162,3 +162,98 @@ export const updateJob = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteJob = async (req, res, next) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "Job not found",
+      });
+    }
+
+    await Job.findByIdAndUpdate(req.params.id, { isDelete: "Yes" }, { new: true });
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Job deleted successfully",
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getJobByCompanyId = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const sortOptions = { createdAt: -1 };
+
+    const jobs = await Job.find({
+      companyId: req.params.id,
+      isDelete: "No"
+    })
+      .sort(sortOptions)
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate("createdBy", "name email")
+      .populate("companyId", "name logo");
+
+    const totalJobs = await Job.countDocuments({
+      companyId: req.params.id,
+      isDelete: "No"
+    });
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Jobs retrieved successfully",
+      jobs,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(totalJobs / parseInt(limit)),
+        totalJobs,
+      },
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const getJobByUserId = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const sortOptions = { createdAt: -1 };
+
+    const jobs = await Job.find({ createdBy: req.params.id })
+      .sort(sortOptions)
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate("createdBy", "name email")
+      .populate("companyId", "name logo");
+
+    const totalJobs = await Job.countDocuments({ createdBy: req.params.id });
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Jobs retrieved successfully",
+      jobs,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(totalJobs / parseInt(limit)),
+        totalJobs,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

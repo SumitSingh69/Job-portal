@@ -4,6 +4,18 @@
 
 Welcome to the JobConnect API documentation. This guide provides comprehensive information about our backend services that power the JobConnect platform. The API is designed to be intuitive, well-structured, and scalable to support the needs of our recruitment platform.
 
+## Recent Updates (March 14, 2023)
+
+### Controller Updates
+- Enhanced `job.controller.js` with improved error handling and validation
+- Added `job-seeker.controller.js` for managing job seeker specific operations
+- Optimized database queries for better performance
+
+### Model Updates
+- Updated `jobs.Model.js` with improved schema structure
+- Added proper indexing for faster job search operations
+- Enhanced relationship between jobs and companies
+
 ## Quick Start Guide
 
 ### Prerequisites
