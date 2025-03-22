@@ -9,7 +9,7 @@ import Login from "./pages/Login";
 import JobBoard from "./pages/Joblisting";
 import JobFilters from "./pages/JobFilters";
 import About from "./components/About";
-
+import JobDetails from "./pages/JobDetails";
 
 const Layout = () => {
   return (
@@ -38,7 +38,7 @@ function App() {
           <Route path="/jobs" element={<JobBoard />} />
           <Route path="/job-filters" element={<JobFilters />} />
           <Route path="/contact" element={<Contact />} />
-          
+          <Route path="/jobDetails" element={<JobDetails />} />
           {/* Catch-all route for 404 pages */}
           <Route path="*" element={
             <div className="text-center py-20">
