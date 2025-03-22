@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import JobDetails from "./JobDetails";
 import {
   Search,
   X,
@@ -39,6 +41,7 @@ const JobBoard = () => {
   const { isLoading: authLoading } = useContext(AuthContext);
   const axios = useAxios();
   const [currJobs, setCurrJobs] = useState([]);
+  const jobPath = "/jobDetails";
 
   // Mock data to simulate API response
   const mockJobsData = {
@@ -141,6 +144,7 @@ const JobBoard = () => {
         const tempData = await axios.get("/jobs");
         const jobsData = tempData.data;
         console.log(jobsData);
+        console.log("hu hue ")
         if (jobsData.success && jobsData.jobs) {
           setJobs(jobsData.jobs);
           setFilteredJobs(
@@ -428,7 +432,7 @@ const JobBoard = () => {
                    </div>
                
                    <div className="flex flex-wrap gap-2 mb-4">
-                     {displaySkills(job.requirement).map((skill) => (
+                     {(job.skills).map((skill) => (
                        <span key={skill} className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm">
                          {skill}
                        </span>
@@ -443,7 +447,7 @@ const JobBoard = () => {
                      Posted {calculateDaysAgo(job.postedDate)} days ago
                    </div>
                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap">
-                     Apply Now
+                     <Link to={jobPath}>Apply now</Link>
                      <ArrowRight className="w-4 h-4" />
                    </button>
                  </div>

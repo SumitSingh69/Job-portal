@@ -1,17 +1,24 @@
-import React, { useState } from "react";
-import { X } from "lucide-react";
-
+import React, { useState,useEffect } from "react";
+import { RollerCoaster, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
   // Initialize state based on backend filter parameters
   const [status, setStatus] = useState({
-    open: true,
-    closed: false
+    role: "",
+    postedDate: "",
   });
 
   const [location, setLocation] = useState({
     city: "",
     state: "",
-    country: ""
+    country: "",
   });
 
   const [salaryRange, setSalaryRange] = useState({
@@ -21,27 +28,19 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
   });
 
   // Handle status change
-  const handleStatusChange = (type) => {
-    setStatus((prev) => {
-      const updated = { ...prev, [type]: !prev[type] };
-      onFiltersChange?.({
-        status: updated,
-        location,
-        salaryRange,
-      });
-      return updated;
-    });
+  const handleStatusChange = (field, value) => {
+    setStatus((prev) => ({ ...prev, [field]: value }));
   };
 
   // Handle location change
   const handleLocationChange = (field, value) => {
     setLocation((prev) => {
       const updated = { ...prev, [field]: value };
-      onFiltersChange?.({
-        status,
-        location: updated,
-        salaryRange,
-      });
+      // onFiltersChange?.({
+      //   status,
+      //   location: updated,
+      //   salaryRange,
+      // });
       return updated;
     });
   };
@@ -50,11 +49,11 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
   const handleSalaryChange = (type, value) => {
     setSalaryRange((prev) => {
       const updated = { ...prev, [type]: parseInt(value) || 0 };
-      onFiltersChange?.({
-        status,
-        location,
-        salaryRange: updated,
-      });
+      // onFiltersChange?.({
+      //   status,
+      //   location,
+      //   salaryRange: updated,
+      // });
       return updated;
     });
   };
@@ -63,23 +62,23 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
   const handleReset = () => {
     setStatus({
       open: true,
-      closed: false
+      closed: false,
     });
     setLocation({
       city: "",
       state: "",
-      country: ""
+      country: "",
     });
     setSalaryRange({
       min: 10000,
       max: 500000,
       current: [10000, 500000],
     });
-    onFiltersChange?.({
-      status: { open: true, closed: false },
-      location: { city: "", state: "", country: "" },
-      salaryRange: { min: 10000, max: 500000, current: [10000, 500000] },
-    });
+    // onFiltersChange?.({
+    //   status: { open: true, closed: false },
+    //   location: { city: "", state: "", country: "" },
+    //   salaryRange: { min: 10000, max: 500000, current: [10000, 500000] },
+    // });
   };
 
   const FilterSection = ({ title, children }) => (
@@ -141,49 +140,74 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
           <div className="flex-1 overflow-y-auto">
             <FilterSection title="Job Status">
               <div className="space-y-2">
-                <Checkbox
-                  label="Open Positions"
-                  checked={status.open}
-                  onChange={() => handleStatusChange("open")}
-                  count="145"
+                <Input
+                  value={status.role || ""}
+                  onChange={(e) => {
+                    handleStatusChange("role", e.target.value);
+                  }}
+                  placeholder="enter a role"
                 />
-                <Checkbox
-                  label="Closed Positions"
-                  checked={status.closed}
-                  onChange={() => handleStatusChange("closed")}
-                  count="32"
-                />
+                <Select
+                  value={status.postedDate} // ✅ Bind value properly
+                  onValueChange={(value) =>
+                    handleStatusChange("postedDate", value)
+                  } // ✅ Handle changes correctly
+                  required
+                >
+                  <SelectTrigger className="rounded-md border-zinc-300 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm">
+                    <SelectValue placeholder="posted date" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Today">Today</SelectItem>
+                    <SelectItem value="Yesterday">Yesterday</SelectItem>
+                    <SelectItem value="1 week ago">1 week ago</SelectItem>
+                    <SelectItem value="1 month ago">1 month ago</SelectItem>
+                    <SelectItem value="older">older</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </FilterSection>
 
             <FilterSection title="Location">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    City
+                  </label>
                   <input
                     type="text"
                     value={location.city}
-                    onChange={(e) => handleLocationChange("city", e.target.value)}
+                    onChange={(e) =>
+                      handleLocationChange("city", e.target.value)
+                    }
                     className="w-full p-2 border rounded"
                     placeholder="Any city"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    State
+                  </label>
                   <input
                     type="text"
                     value={location.state}
-                    onChange={(e) => handleLocationChange("state", e.target.value)}
+                    onChange={(e) =>
+                      handleLocationChange("state", e.target.value)
+                    }
                     className="w-full p-2 border rounded"
                     placeholder="Any state"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Country
+                  </label>
                   <input
                     type="text"
                     value={location.country}
-                    onChange={(e) => handleLocationChange("country", e.target.value)}
+                    onChange={(e) =>
+                      handleLocationChange("country", e.target.value)
+                    }
                     className="w-full p-2 border rounded"
                     placeholder="Any country"
                   />
@@ -231,11 +255,11 @@ const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  onFiltersChange?.({
-                    status,
-                    location,
-                    salaryRange,
-                  });
+                  // onFiltersChange?.({
+                  //   status,
+                  //   location,
+                  //   salaryRange,
+                  // });
                   onClose?.();
                 }}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"

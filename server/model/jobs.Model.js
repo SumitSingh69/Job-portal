@@ -50,6 +50,12 @@ const jobsSchema = new mongoose.Schema({
       required: true,
       index: true,
     },
+    jobType: {
+      type: String,
+      required: true,
+      enum: ["remote","onsite"],
+      index: true,
+    },
   },
 
   // Job Requirements
@@ -89,6 +95,19 @@ const jobsSchema = new mongoose.Schema({
     index: true,
   },
   
+  openings:{
+    type: Number,
+    required: true,
+    min: 1,
+    index: true,
+  },
+  applicants:{
+    type : Number,
+    required : true,
+    default : 0,
+    index : true
+  },
+
   status: {
     type: String,
     required: true,
