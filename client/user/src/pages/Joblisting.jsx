@@ -164,35 +164,54 @@ const JobBoard = () => {
     // }, 500);
   }, [authLoading, axios]);
   const displaySkills = (requirements) => {
-    if (!requirements || !Array.isArray(requirements)) return [];
-    return requirements
-      .filter((req) => !req.toLowerCase().includes("year"))
-      .map((req) => {
-        const skills = [
-          "react",
-          "node",
-          "next",
-          "c++",
-          "c#",
-          "java",
-          "aws",
-          "aws",
-          "js",
-          "docker",
-          "express",
-        ];
+    if (!Array.isArray(requirements)) return [];
+  
+    const skills = [
+      "Restful API", "react", "node", "next", "c++", "c#",
+      "java", "aws", "javascript", "docker", "express", "typescript",
+      "graphql", "mongodb", "postgresql", "mysql", "redis",
+      "firebase", "kubernetes", "azure", "gcp", "python",
+      "django", "flask", "fastapi", "spring boot", "rust",
+      "go", "bash", "linux", "tailwind", "bootstrap", "sass",
+      "webpack", "vite", "jest", "cypress", "puppeteer",
+      "storybook", "redux", "zustand", "prisma", "supabase",
+      "elastic search", "rabbitmq", "kafka", "terraform",
+      "ansible", "ci/cd", "git", "github actions", "socket.io",
+      "webassembly", "three.js", "astro", "solid.js", "svelte",
+      "turborepo"
+    ].map(skill => skill.toLowerCase());
+  
+    const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // Escapes special characters
+  
+    const extractedSkills = new Set(); // Avoid duplicates
+  
+    requirements
+      .filter(req => !req.toLowerCase().includes("year")) // Remove "year" mentions
+      .forEach(req => {
+        const lowerReq = req.toLowerCase();
+  
         for (const skill of skills) {
-          if (req.toLowerCase().includes(skill)) {
-            return skill.charAt(0).toUpperCase() + skill.slice(1);
+          const regex = new RegExp(`\\b${escapeRegExp(skill)}\\b`, "i"); // Escape special chars
+          if (regex.test(lowerReq)) {
+            extractedSkills.add(skill.charAt(0).toUpperCase() + skill.slice(1)); // Capitalize
+            break; // Stop after first match in this requirement
           }
         }
-        const word = req.split(" ");
-        if (word.length > 3) return word.slice(0, 2).join(" ");
-        return req;
-      }).filter(Boolean).slice(0,3);
-
-
+      });
+  
+    return [...extractedSkills].slice(0, 3); // Convert to array & limit to 3
   };
+  
+  
+  // Example usage:
+  const requirements = [
+    "Proficiency in react.js, Express.js, and MongoDB",
+    "Experience with RESTful API design and GraphQL",
+    "Knowledge of AWS, Docker, and Kubernetes"
+  ];
+  
+  console.log(displaySkills(requirements));
+  
   const getCompanyLogo = (job) => {
     if (job.companyId && job.companyId.logo) return job.companyId.logo;
 
@@ -371,87 +390,66 @@ const JobBoard = () => {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {filteredJobs.map((job) => (
-                  <div
-                    key={job._id}
-                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex gap-4">
-                          <img
-                            src={getCompanyLogo(job)}
-                            alt={`${getCompanyName(job)} logo`}
-                            className="w-12 h-12 rounded-lg object-contain bg-gray-50"
-                          />
-                          <div>
-                            <h3 className="font-semibold text-lg text-gray-900">
-                              {job.title}
-                            </h3>
-                            <p className="text-blue-600 font-medium">
-                              {getCompanyName(job)}
-                            </p>
-                          </div>
-                        </div>
-                        <button className="text-gray-400 hover:text-yellow-400 transition-colors">
-                          <Star className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {job.status === "open" && (
-                          <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-sm font-medium">
-                            Open
-                          </span>
-                        )}
-                        {/* {job.location.city === "Remote" && (
-                          <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-sm font-medium">
-                            Remote
-                          </span>
-                        )} */}
-                      </div>
-
-                      <div className="space-y-3 mb-4">
-                        <div className="flex items-center text-gray-600">
-                          <MapPin className="mr-2 text-blue-500 w-5 h-5" />
-                          <span>{`${job.location.city}, ${job.location.state}, ${job.location.country}`}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <Briefcase className="mr-2 text-blue-500 w-5 h-5" />
-                          <span>Full-time</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <DollarSign className="mr-2 text-blue-500 w-5 h-5" />
-                          <span>{`${formatSalary(
-                            job.min_salary
-                          )} - ${formatSalary(job.max_salary)}`}</span>
-                        </div>
-                      </div>
-                      <div className="text-gray-700 text-sm mb-4 line-clamp-2">
-                        {job.description}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {displaySkills(job.requirement).map((skill) => (
-                          <span
-                            key={skill}
-                            className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <Clock className="mr-1 w-4 h-4" />
-                          Posted {calculateDaysAgo(job.postedDate)} days ago
-                        </div>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap">
-                          Apply Now
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                 <div
+                 key={job._id}
+                 className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full"
+               >
+                 <div className="p-6 flex-grow">
+                   <div className="flex items-start justify-between mb-4">
+                     <div className="flex gap-4">
+                       <img
+                         src={getCompanyLogo(job)}
+                         alt={`${getCompanyName(job)} logo`}
+                         className="w-12 h-12 rounded-lg object-contain bg-gray-50"
+                       />
+                       <div>
+                         <h3 className="font-semibold text-lg text-gray-900">{job.title}</h3>
+                         <p className="text-blue-600 font-medium">{getCompanyName(job)}</p>
+                       </div>
+                     </div>
+                     <button className="text-gray-400 hover:text-yellow-400 transition-colors">
+                       <Star className="w-5 h-5" />
+                     </button>
+                   </div>
+               
+                   <div className="space-y-3 mb-4">
+                     <div className="flex items-center text-gray-600">
+                       <MapPin className="mr-2 text-blue-500 w-5 h-5" />
+                       <span>{`${job.location.city}, ${job.location.state}, ${job.location.country}`}</span>
+                     </div>
+                     <div className="flex items-center text-gray-600">
+                       <Briefcase className="mr-2 text-blue-500 w-5 h-5" />
+                       <span>Full-time</span>
+                     </div>
+                     <div className="flex items-center text-gray-600">
+                       <DollarSign className="mr-2 text-blue-500 w-5 h-5" />
+                       <span>{`${formatSalary(job.min_salary)} - ${formatSalary(job.max_salary)}`}</span>
+                     </div>
+                   </div>
+               
+                   <div className="flex flex-wrap gap-2 mb-4">
+                     {displaySkills(job.requirement).map((skill) => (
+                       <span key={skill} className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-sm">
+                         {skill}
+                       </span>
+                     ))}
+                   </div>
+                 </div>
+               
+                 {/* ✅ Footer Now Stays at the Bottom */}
+                 <div className="flex items-center justify-between p-6 border-t border-gray-100 mt-auto">
+                   <div className="flex items-center text-gray-500 text-sm">
+                     <Clock className="mr-1 w-4 h-4" />
+                     Posted {calculateDaysAgo(job.postedDate)} days ago
+                   </div>
+                   <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap">
+                     Apply Now
+                     <ArrowRight className="w-4 h-4" />
+                   </button>
+                 </div>
+               </div>
+               
+                
                 ))}
               </div>
             )}
