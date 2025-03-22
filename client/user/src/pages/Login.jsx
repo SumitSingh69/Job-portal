@@ -131,28 +131,7 @@ const Login = () => {
         </form>
 
         {/* OR Divider */}
-        <div className="flex items-center justify-between">
-          <span className="border-b w-full"></span>
-          <span className="text-muted-foreground mx-2">or</span>
-          <span className="border-b w-full"></span>
-        </div>
-
-        {/* Social Login Buttons */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            variant="outline"
-            className="flex items-center justify-center"
-          >
-            <Github className="mr-2" /> Github
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center justify-center"
-          >
-            <Mail className="mr-2" /> Google
-          </Button>
-        </div>
-
+        
         <div className="text-center text-sm">
           Don't have an account?{" "}
           <Link to="/signup" className="text-blue-500">

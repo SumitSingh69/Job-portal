@@ -328,7 +328,7 @@ const Signup = () => {
           </motion.div>
         </motion.form>
 
-        <motion.div 
+        {/* <motion.div 
           className="flex items-center justify-between my-4"
           variants={itemVariants}
           initial="hidden"
@@ -338,8 +338,8 @@ const Signup = () => {
           <span className="border-b w-full border-zinc-300 dark:border-zinc-700"></span>
           <span className="text-zinc-500 dark:text-zinc-400 mx-4 text-xs">or</span>
           <span className="border-b w-full border-zinc-300 dark:border-zinc-700"></span>
-        </motion.div>
-
+        </motion.div> */}
+{/* 
         <motion.div 
           className="grid grid-cols-2 gap-3"
           variants={containerVariants}
@@ -365,7 +365,7 @@ const Signup = () => {
           >
             <Mail className="w-4 h-4 text-red-500" /> Google
           </motion.button>
-        </motion.div>
+        </motion.div> */}
 
         <motion.div 
           className="text-center text-xs mt-5 text-zinc-600 dark:text-zinc-400"
