@@ -1,285 +1,466 @@
-import React, { useState,useEffect } from "react";
-import { RollerCoaster, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-const JobFilters = ({ onFiltersChange, isOpen, onClose }) => {
-  // Initialize state based on backend filter parameters
-  const [status, setStatus] = useState({
-    role: "",
-    postedDate: "",
-  });
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { 
+  X, 
+  Sliders, 
+  Building, 
+  DollarSign, 
+  MapPin, 
+  Search, 
+  ToggleRight, 
+  Tag, 
+  Briefcase,
+  RefreshCw
+} from "lucide-react";
 
-  const [location, setLocation] = useState({
-    city: "",
+const JobFilters = ({ onFiltersChange, isOpen = true, onClose }) => {
+  // Initial state for all filters
+  const [filters, setFilters] = useState({
+    companyId: "",
     state: "",
-    country: "",
+    city: "",
+    minSalary: "",
+    maxSalary: "",
+    status: "",
+    remote: false,
+    fullTime: false,
+    jobType: "",
+    skills: []
   });
-
-  const [salaryRange, setSalaryRange] = useState({
-    min: 10000,
-    max: 500000,
-    current: [10000, 500000],
+  
+  // State for selected skills
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [skillInput, setSkillInput] = useState("");
+  
+  // States for UI components
+  const [expanded, setExpanded] = useState({
+    location: true,
+    company: true,
+    salary: true,
+    jobType: true,
+    skills: true
   });
-
-  // Handle status change
-  const handleStatusChange = (field, value) => {
-    setStatus((prev) => ({ ...prev, [field]: value }));
+  
+  // Available filter options
+  const companies = [
+    { id: "company1", name: "Design Magic" },
+    { id: "company2", name: "Tech Innovate" },
+    { id: "company3", name: "Creative Solutions" },
+    { id: "company4", name: "Digital Crafters" },
+    { id: "company5", name: "WebSolutions" }
+  ];
+  
+  const states = ["CA", "NY", "WA", "IL", "MA", "Remote"];
+  const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance", "Internship"];
+  const popularSkills = ["UI Design", "UX Design", "Figma", "Adobe XD", "User Research", "Prototyping", "Wireframing", "Interaction Design", "Visual Design"];
+  
+  // Handle filter change and propagate to parent
+  const handleFilterChange = (name, value) => {
+    const updatedFilters = {
+      ...filters,
+      [name]: value
+    };
+    
+    setFilters(updatedFilters);
+    onFiltersChange(updatedFilters);
   };
-
-  // Handle location change
-  const handleLocationChange = (field, value) => {
-    setLocation((prev) => {
-      const updated = { ...prev, [field]: value };
-      // onFiltersChange?.({
-      //   status,
-      //   location: updated,
-      //   salaryRange,
-      // });
-      return updated;
-    });
+  
+  // Handle skill addition
+  const addSkill = (skill) => {
+    if (skill && !selectedSkills.includes(skill)) {
+      const newSkills = [...selectedSkills, skill];
+      setSelectedSkills(newSkills);
+      handleFilterChange("skills", newSkills);
+      setSkillInput("");
+    }
   };
-
-  // Handle salary range change
-  const handleSalaryChange = (type, value) => {
-    setSalaryRange((prev) => {
-      const updated = { ...prev, [type]: parseInt(value) || 0 };
-      // onFiltersChange?.({
-      //   status,
-      //   location,
-      //   salaryRange: updated,
-      // });
-      return updated;
-    });
+  
+  // Handle skill removal
+  const removeSkill = (skillToRemove) => {
+    const newSkills = selectedSkills.filter(skill => skill !== skillToRemove);
+    setSelectedSkills(newSkills);
+    handleFilterChange("skills", newSkills);
   };
-
-  // Reset all filters
-  const handleReset = () => {
-    setStatus({
-      open: true,
-      closed: false,
-    });
-    setLocation({
-      city: "",
+  
+  // Handle reset all filters
+  const resetFilters = () => {
+    setFilters({
+      companyId: "",
       state: "",
-      country: "",
+      city: "",
+      minSalary: "",
+      maxSalary: "",
+      status: "",
+      remote: false,
+      fullTime: false,
+      jobType: "",
+      skills: []
     });
-    setSalaryRange({
-      min: 10000,
-      max: 500000,
-      current: [10000, 500000],
-    });
-    // onFiltersChange?.({
-    //   status: { open: true, closed: false },
-    //   location: { city: "", state: "", country: "" },
-    //   salaryRange: { min: 10000, max: 500000, current: [10000, 500000] },
-    // });
+    
+    setSelectedSkills([]);
+    setSkillInput("");
+    
+    onFiltersChange({});
   };
-
-  const FilterSection = ({ title, children }) => (
-    <div className="p-4 border-b border-gray-200 last:border-b-0">
-      <h2 className="text-lg font-semibold mb-3 text-gray-800">{title}</h2>
-      {children}
-    </div>
-  );
-
-  const Checkbox = ({ label, checked, onChange, count }) => (
-    <label className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        <span className="ml-2 text-gray-700">{label}</span>
-      </div>
-      {count && (
-        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-          {count}
-        </span>
-      )}
-    </label>
-  );
-
-  // Mobile bottom sheet and desktop sidebar styles
-  const containerClasses = isOpen
-    ? "fixed inset-x-0 bottom-0 z-50 transform translate-y-0 transition-transform duration-300 ease-in-out lg:relative lg:transform-none lg:z-0 lg:w-64"
-    : "fixed inset-x-0 bottom-0 z-50 transform translate-y-full transition-transform duration-300 ease-in-out lg:relative lg:transform-none lg:z-0 lg:w-64";
+  
+  // Toggle section expansion
+  const toggleExpand = (section) => {
+    setExpanded({
+      ...expanded,
+      [section]: !expanded[section]
+    });
+  };
+  
+  // Define animation variants
+  const contentVariants = {
+    hidden: { height: 0, opacity: 0, overflow: "hidden" },
+    visible: { height: "auto", opacity: 1, overflow: "visible" }
+  };
 
   return (
-    <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Filter content */}
-      <div className={containerClasses}>
-        <div className="bg-white rounded-t-2xl lg:rounded-none shadow-lg lg:shadow-none h-[85vh] lg:h-auto flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-800">Filters</h1>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-full"
+    <div className="p-4">
+      {/* Filter header with reset button */}
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-medium text-gray-900">Filter Jobs</h3>
+        <button 
+          onClick={resetFilters}
+          className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center"
+        >
+          <RefreshCw className="w-3 h-3 mr-1" />
+          Reset
+        </button>
+      </div>
+      
+      {/* Location Filter */}
+      <div className="mb-6">
+        <div 
+          className="flex justify-between items-center cursor-pointer mb-3"
+          onClick={() => toggleExpand("location")}
+        >
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-indigo-600" />
+            <h4 className="font-medium text-gray-800">Location</h4>
+          </div>
+          <motion.div 
+            animate={{ rotate: expanded.location ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <X className="w-4 h-4 text-gray-500 transform rotate-45" />
+          </motion.div>
+        </div>
+        
+        <motion.div
+          variants={contentVariants}
+          initial={expanded.location ? "visible" : "hidden"}
+          animate={expanded.location ? "visible" : "hidden"}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-3">
+            <label className="block text-sm text-gray-600 mb-1.5">City</label>
+            <input
+              type="text"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              placeholder="Any city"
+              value={filters.city}
+              onChange={(e) => handleFilterChange("city", e.target.value)}
+            />
+          </div>
+          
+          <div className="mb-3">
+            <label className="block text-sm text-gray-600 mb-1.5">State</label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+              value={filters.state}
+              onChange={(e) => handleFilterChange("state", e.target.value)}
             >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
+              <option value="">Any state</option>
+              {states.map((state) => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
           </div>
-
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto">
-            <FilterSection title="Job Status">
-              <div className="space-y-2">
-                <Input
-                  value={status.role || ""}
-                  onChange={(e) => {
-                    handleStatusChange("role", e.target.value);
-                  }}
-                  placeholder="enter a role"
-                />
-                <Select
-                  value={status.postedDate} // ✅ Bind value properly
-                  onValueChange={(value) =>
-                    handleStatusChange("postedDate", value)
-                  } // ✅ Handle changes correctly
-                  required
-                >
-                  <SelectTrigger className="rounded-md border-zinc-300 focus:border-blue-500 focus:ring-blue-500 h-9 text-sm">
-                    <SelectValue placeholder="posted date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Today">Today</SelectItem>
-                    <SelectItem value="Yesterday">Yesterday</SelectItem>
-                    <SelectItem value="1 week ago">1 week ago</SelectItem>
-                    <SelectItem value="1 month ago">1 month ago</SelectItem>
-                    <SelectItem value="older">older</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </FilterSection>
-
-            <FilterSection title="Location">
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={location.city}
-                    onChange={(e) =>
-                      handleLocationChange("city", e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                    placeholder="Any city"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={location.state}
-                    onChange={(e) =>
-                      handleLocationChange("state", e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                    placeholder="Any state"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={location.country}
-                    onChange={(e) =>
-                      handleLocationChange("country", e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                    placeholder="Any country"
-                  />
-                </div>
-              </div>
-            </FilterSection>
-
-            <FilterSection title="Salary Range">
-              <div className="space-y-4">
+          
+          <div className="flex items-center gap-2 text-gray-700">
+            <input
+              type="checkbox"
+              id="remote"
+              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              checked={filters.remote}
+              onChange={(e) => handleFilterChange("remote", e.target.checked)}
+            />
+            <label htmlFor="remote" className="text-sm">Remote only</label>
+          </div>
+        </motion.div>
+      </div>
+      
+      {/* Company Filter */}
+      <div className="mb-6 border-t border-gray-100 pt-6">
+        <div 
+          className="flex justify-between items-center cursor-pointer mb-3"
+          onClick={() => toggleExpand("company")}
+        >
+          <div className="flex items-center gap-2">
+            <Building className="w-4 h-4 text-indigo-600" />
+            <h4 className="font-medium text-gray-800">Company</h4>
+          </div>
+          <motion.div 
+            animate={{ rotate: expanded.company ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <X className="w-4 h-4 text-gray-500 transform rotate-45" />
+          </motion.div>
+        </div>
+        
+        <motion.div
+          variants={contentVariants}
+          initial={expanded.company ? "visible" : "hidden"}
+          animate={expanded.company ? "visible" : "hidden"}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-3">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                className="w-full pl-10 p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                placeholder="Search companies"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {companies.map((company) => (
+              <div key={company.id} className="flex items-center gap-2 text-gray-700">
                 <input
-                  type="range"
-                  min="10000"
-                  max="500000"
-                  value={salaryRange.current[1]}
-                  onChange={(e) =>
-                    handleSalaryChange("current", [
-                      salaryRange.current[0],
-                      e.target.value,
-                    ])
-                  }
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  type="radio"
+                  id={`company-${company.id}`}
+                  name="company"
+                  className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                  checked={filters.companyId === company.id}
+                  onChange={() => handleFilterChange("companyId", company.id)}
                 />
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={salaryRange.min}
-                    onChange={(e) => handleSalaryChange("min", e.target.value)}
-                    className="w-full p-2 border rounded text-center"
-                    placeholder="MIN"
-                  />
-                  <input
-                    type="text"
-                    value={salaryRange.max}
-                    onChange={(e) => handleSalaryChange("max", e.target.value)}
-                    className="w-full p-2 border rounded text-center"
-                    placeholder="MAX"
-                  />
-                </div>
+                <label htmlFor={`company-${company.id}`} className="text-sm">{company.name}</label>
               </div>
-            </FilterSection>
+            ))}
           </div>
-
-          {/* Footer with buttons */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  // onFiltersChange?.({
-                  //   status,
-                  //   location,
-                  //   salaryRange,
-                  // });
-                  onClose?.();
-                }}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
+        </motion.div>
+      </div>
+      
+      {/* Salary Filter */}
+      <div className="mb-6 border-t border-gray-100 pt-6">
+        <div 
+          className="flex justify-between items-center cursor-pointer mb-3"
+          onClick={() => toggleExpand("salary")}
+        >
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-indigo-600" />
+            <h4 className="font-medium text-gray-800">Salary Range</h4>
+          </div>
+          <motion.div 
+            animate={{ rotate: expanded.salary ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <X className="w-4 h-4 text-gray-500 transform rotate-45" />
+          </motion.div>
+        </div>
+        
+        <motion.div
+          variants={contentVariants}
+          initial={expanded.salary ? "visible" : "hidden"}
+          animate={expanded.salary ? "visible" : "hidden"}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex gap-4 mb-3">
+            <div className="w-1/2">
+              <label className="block text-sm text-gray-600 mb-1.5">Minimum ($)</label>
+              <select
+                className="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                value={filters.minSalary}
+                onChange={(e) => handleFilterChange("minSalary", e.target.value)}
               >
-                Apply Filters
-              </button>
-              <button
-                onClick={() => {
-                  handleReset();
-                  onClose?.();
-                }}
-                className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition-colors"
+                <option value="">No min</option>
+                <option value="50000">$50k</option>
+                <option value="75000">$75k</option>
+                <option value="100000">$100k</option>
+                <option value="125000">$125k</option>
+                <option value="150000">$150k</option>
+              </select>
+            </div>
+            <div className="w-1/2">
+              <label className="block text-sm text-gray-600 mb-1.5">Maximum ($)</label>
+              <select
+                className="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                value={filters.maxSalary}
+                onChange={(e) => handleFilterChange("maxSalary", e.target.value)}
               >
-                Reset
+                <option value="">No max</option>
+                <option value="75000">$75k</option>
+                <option value="100000">$100k</option>
+                <option value="125000">$125k</option>
+                <option value="150000">$150k</option>
+                <option value="200000">$200k</option>
+              </select>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+      
+      {/* Job Type Filter */}
+      <div className="mb-6 border-t border-gray-100 pt-6">
+        <div 
+          className="flex justify-between items-center cursor-pointer mb-3"
+          onClick={() => toggleExpand("jobType")}
+        >
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-indigo-600" />
+            <h4 className="font-medium text-gray-800">Job Type</h4>
+          </div>
+          <motion.div 
+            animate={{ rotate: expanded.jobType ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <X className="w-4 h-4 text-gray-500 transform rotate-45" />
+          </motion.div>
+        </div>
+        
+        <motion.div
+          variants={contentVariants}
+          initial={expanded.jobType ? "visible" : "hidden"}
+          animate={expanded.jobType ? "visible" : "hidden"}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="space-y-2">
+            {jobTypes.map((type) => (
+              <div key={type} className="flex items-center gap-2 text-gray-700">
+                <input
+                  type="radio"
+                  id={`type-${type}`}
+                  name="jobType"
+                  className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                  checked={filters.jobType === type}
+                  onChange={() => handleFilterChange("jobType", type)}
+                />
+                <label htmlFor={`type-${type}`} className="text-sm">{type}</label>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+      
+      {/* Skills Filter */}
+      <div className="mb-6 border-t border-gray-100 pt-6">
+        <div 
+          className="flex justify-between items-center cursor-pointer mb-3"
+          onClick={() => toggleExpand("skills")}
+        >
+          <div className="flex items-center gap-2">
+            <Tag className="w-4 h-4 text-indigo-600" />
+            <h4 className="font-medium text-gray-800">Skills</h4>
+          </div>
+          <motion.div 
+            animate={{ rotate: expanded.skills ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <X className="w-4 h-4 text-gray-500 transform rotate-45" />
+          </motion.div>
+        </div>
+        
+        <motion.div
+          variants={contentVariants}
+          initial={expanded.skills ? "visible" : "hidden"}
+          animate={expanded.skills ? "visible" : "hidden"}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="mb-3">
+            <div className="relative">
+              <input
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                placeholder="Add a skill"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSkill(skillInput);
+                  }
+                }}
+              />
+              <button 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-800"
+                onClick={() => addSkill(skillInput)}
+              >
+                Add
               </button>
             </div>
           </div>
-        </div>
+          
+          {/* Selected skills */}
+          {selectedSkills.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">Selected Skills:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedSkills.map((skill) => (
+                  <div 
+                    key={skill} 
+                    className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full text-xs flex items-center"
+                  >
+                    {skill}
+                    <button 
+                      className="ml-1.5 hover:text-indigo-900"
+                      onClick={() => removeSkill(skill)}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Popular skills */}
+          <div>
+            <p className="text-sm text-gray-600 mb-2">Popular Skills:</p>
+            <div className="flex flex-wrap gap-2">
+              {popularSkills.map((skill) => (
+                <div 
+                  key={skill} 
+                  className={`px-2 py-1 rounded-full text-xs cursor-pointer ${
+                    selectedSkills.includes(skill) 
+                      ? 'bg-indigo-100 text-indigo-700' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  onClick={() => {
+                    if (selectedSkills.includes(skill)) {
+                      removeSkill(skill);
+                    } else {
+                      addSkill(skill);
+                    }
+                  }}
+                >
+                  {skill}
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </>
+      
+      {/* Mobile Apply Button */}
+      {onClose && (
+        <div className="pt-4 border-t border-gray-100">
+          <button
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+            onClick={() => {
+              onFiltersChange(filters);
+              onClose();
+            }}
+          >
+            Apply Filters
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
