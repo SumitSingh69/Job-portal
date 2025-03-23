@@ -40,7 +40,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   
   const isLoggedIn = !!user?.id;
-  console.log(user)
+  // console.log(user)
   const navItems = [
     { path: "/", text: "Home", icon: <Home size={20} /> },
     { path: "/jobs", text: "Jobs", icon: <Briefcase size={20} /> },

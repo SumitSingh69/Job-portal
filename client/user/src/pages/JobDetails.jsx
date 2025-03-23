@@ -1,17 +1,65 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import useAxios from "../hooks/useAxios";
 
 const JobDetails = () => {
-  const job = {
-    role: "Frontend Developer",
-    company: "Tech Innovators Inc.",
-    location: "Remote",
-    salaryRange: "$60,000 - $80,000 per year",
-    description:
-      "We are looking for a skilled Frontend Developer to join our team. You will be responsible for building and maintaining the UI components of our web applications.",
-    skillsRequired: ["React", "JavaScript", "CSS", "HTML", "Redux"],
-    datePosted: "March 20, 2025",
-    applicants: 120,
-    positions: 3,
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { id } = useParams();
+  const axios = useAxios();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/job/${id}`);
+        console.log(response.data);
+        if (response.data.success) {
+          setJob(response.data.job);
+        } else {
+          setError("Failed to fetch job details");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching job details");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchJobDetails();
+  }, [id, axios]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6 flex flex-col items-center justify-center">
+        <div className="text-lg font-medium text-gray-700">Loading job details...</div>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-6 flex flex-col items-center justify-center">
+        <div className="text-lg font-medium text-red-600">{error || "Job not found"}</div>
+      </div>
+    );
+  }
+
+  // Format salary range
+  const formatSalary = (min, max) => {
+    return `$${min.toLocaleString()} - $${max.toLocaleString()} per year`;
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   return (
@@ -20,20 +68,24 @@ const JobDetails = () => {
         <div className="w-full md:w-2/3 space-y-6">
           <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100">
             <div className="border-b border-gray-100 pb-6 flex items-center relative">
-              <div className="w-16 h-16 bg-blue-50 flex items-center justify-center rounded-full mr-4 absolute top-2 border-2 border-blue-100">
-                <span className="text-lg font-bold text-blue-500">{job.company.charAt(0)}</span>
-              </div>
+            {job.companyId && job.companyId.logo && (
+                <div className="w-16 h-16 bg-blue-50 flex items-center justify-center rounded-full mr-4 absolute top-2 border-2 border-blue-100">
+                  <img src={job.companyId.logo} alt={job.companyId.name} className="w-12 h-12 object-cover rounded-full" />
+                </div>
+              )}
               <div className="ml-20">
-                <h2 className="text-2xl font-bold text-gray-800">{job.role}</h2>
+                <h2 className="text-2xl font-bold text-gray-800">{job.title}</h2>
                 <p className="text-gray-600 flex items-center gap-1">
-                  <span className="font-medium">{job.company}</span> 
+                {job.companyId && job.companyId.name && (
+                    <span className="font-medium">{job.companyId.name}</span>
+                  )}
                   <span className="text-gray-400">•</span> 
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
-                    {job.location}
+                    {job.location.city}, {job.location.state}, {job.location.country}
                   </span>
                 </p>
                 <div className="mt-3 flex flex-wrap gap-4">
@@ -41,7 +93,7 @@ const JobDetails = () => {
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
-                    <span>Posted: {job.datePosted}</span>
+                    <span>Posted: {formatDate(job.postedDate)}</span>
                   </div>
                   <div className="flex items-center gap-1 text-gray-500 text-sm">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -53,12 +105,17 @@ const JobDetails = () => {
                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>{job.positions} positions available</span>
+                    <span>Status: {job.status}</span>
                   </div>
                 </div>
                 <div className="mt-4">
                   <span className="inline-block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {job.salaryRange}
+                    {formatSalary(job.min_salary, job.max_salary)}
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span className="inline-block bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
+                    Deadline: {formatDate(job.applicationDeadline)}
                   </span>
                 </div>
               </div>
@@ -86,6 +143,21 @@ const JobDetails = () => {
               Job Description
             </h3>
             <p className="text-gray-700 leading-relaxed">{job.description}</p>
+            
+            <div className="mt-6">
+              <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Requirements
+              </h4>
+              <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                {job.requirement.map((req, index) => (
+                  <li key={index}>{req}</li>
+                ))}
+              </ul>
+            </div>
+            
             <div className="mt-6">
               <h4 className="font-bold text-gray-700 mb-3 flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -95,7 +167,7 @@ const JobDetails = () => {
                 Skills Required
               </h4>
               <div className="flex flex-wrap gap-2">
-                {job.skillsRequired.map((skill, index) => (
+                {job.skills.map((skill, index) => (
                   <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
                     {skill}
                   </span>

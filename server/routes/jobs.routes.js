@@ -9,7 +9,7 @@ router.post("/job/create", verifyAccessToken, isAnyRecruiterOrAdmin, createJob);
 router.get("/job/:id", verifyAccessToken, isAnyRecruiterOrAdmin, getJobById);
 router.get("/jobs", getAllJobs);
 
-router.put("/job/:id", verifyAccessToken, isAnyRecruiterOrAdmin, updateJob);
+router.put("/job/:id", verifyAccessToken, isAnyRecruiterOrAdminOrJobseeker , updateJob);
 router.post("/job/delete/:id", verifyAccessToken, isAnyRecruiterOrAdmin, deleteJob);
 router.get("/jobs/company/:id", getJobByCompanyId);
 router.get("/jobs/user/:id", getJobByUserId);

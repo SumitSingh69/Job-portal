@@ -33,7 +33,7 @@ export const createJob = async (req, res, next) => {
 
 export const getJobById = async (req, res, next) => {
   try {
-    const job = await Job.findById(req.params.id);
+    const job = await Job.findById(req.params.id).populate("companyId", "name logo _id");
     if (!job) {
       return res.status(HTTPSTATUS.NOT_FOUND).json({
         success: false,
@@ -41,6 +41,17 @@ export const getJobById = async (req, res, next) => {
         message: "Job not found",
       });
     }
+
+    // if (job && (!job.companyId || !job.companyId._id)) {
+      
+    //   await Job.findByIdAndDelete(req.params.id);
+
+    //   return res.status(HTTPSTATUS.NOT_FOUND).json({
+    //     success: false,
+    //     status: HTTPSTATUS.NOT_FOUND,
+    //     message: "Job deleted because its associated company no longer exists",
+    //   });
+    // }
 
     res.status(HTTPSTATUS.OK).json({
       success: true,

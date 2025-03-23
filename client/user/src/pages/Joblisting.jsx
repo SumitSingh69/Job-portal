@@ -485,7 +485,7 @@ const JobBoard = () => {
                               <Star className="w-4 h-4 text-gray-300" />
                             </div>
                             <div className="flex items-center text-indigo-600 font-medium text-sm">
-                              View Details{" "}
+                              View Details
                               <ArrowRight className="w-4 h-4 ml-1" />
                             </div>
                           </div>
