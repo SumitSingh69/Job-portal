@@ -3,7 +3,6 @@ import Job from "../model/jobs.Model.js";
 import User from "../model/user.Model.js";
 import mongoose from "mongoose";
 
-
 export const createJob = async (req, res, next) => {
   try {
     const body = req.body;

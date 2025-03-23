@@ -8,6 +8,8 @@ import session from "express-session";
 import ErrorHandler from "./middleware/ErrorHandler.js";
 import companyRouter from "./routes/company.routes.js";
 import jobRouter from "./routes/jobs.routes.js";
+import adminRouter from "./routes/admin.routes.js";
+
 dotenv.config();
 
 const app = express();
@@ -54,6 +56,7 @@ app.use(ErrorHandler);
 app.use('/api', indexRouter);
 app.use('/api', companyRouter);
 app.use('/api', jobRouter);
+app.use('/api', adminRouter);
 
 connectDB().then(() => {
     app.listen(PORT, () => {

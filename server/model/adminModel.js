@@ -1,43 +1,69 @@
-import mongoose from 'mongoose'
-import {Schema , model} from 'mongoose';
-import bcrypt from 'bcrypt';
+import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-
-const AdminSchema = new Schema ({
-    username:{
-        type:String,
-        required:true
+const adminSchema = new Schema(
+  {
+    username: {
+      type: String,
+      required: true,
     },
-    password:{
-    type:String,
-        required:true
+    password: {
+      type: String,
+      required: true,
     },
-    email:{
-        type:String,
-        required:true,
+    email: {
+      type: String,
+      required: true,
     },
-    role:{
-        type:String,
-        required:true,
-         enum:["Admin"]
-    }
-})
+    role: {
+      type: String,
+      required: true,
+      enum: ["Admin"],
+    },
+    refreshToken: {
+      type: String,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 const hashPassword = async (password) => {
-    return await bcrypt.hash(password, 10);
+  return await bcrypt.hash(password, 10);
 };
 
-AdminSchema.methods.isValidPassword = async function (password) {
-    return await bcrypt.compare(password, this.password);
+adminSchema.methods.isValidPassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
 };
 
-AdminSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
+adminSchema.methods.generateAccessToken = function () {
+  const { _id } = this;
+  const accessToken = jwt.sign({ userId: _id }, process.env.JWT_ACCESS_SECRET, {
+    expiresIn: "1h",
+  });
+  return accessToken;
+};
+
+adminSchema.methods.generateRefreshToken = function () {
+  const { _id } = this;
+  const refreshToken = jwt.sign(
+    { userId: _id },
+    process.env.JWT_REFRESH_SECRET,
+    {
+      expiresIn: "7d",
     }
-    this.password = await hashPassword(this.password);
-    next();
+  );
+  return refreshToken;
+};
+
+adminSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+  this.password = await hashPassword(this.password);
+  next();
 });
 
-  const AdminModel = model('Admin', AdminSchema);
-  export default AdminModel;
-  
+const AdminModel = model("Admin", adminSchema);
+export default AdminModel;
