@@ -46,8 +46,12 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose, initialAppliedFil
   });
 
   useEffect(() => {
+    // Update local state when initialAppliedFilter prop changes
     if (initialAppliedFilter) {
-      handleFilterChange("appliedFilter", initialAppliedFilter);
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        appliedFilter: initialAppliedFilter
+      }));
     }
   }, [initialAppliedFilter]);
   
@@ -94,7 +98,7 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose, initialAppliedFil
   
   // Handle reset all filters
   const resetFilters = () => {
-    setFilters({
+    const resetState = {
       companyId: "",
       state: "",
       city: "",
@@ -106,12 +110,14 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose, initialAppliedFil
       jobType: "",
       skills: [],
       appliedFilter: "all" // Reset to "all" when resetting filters
-    });
+    };
     
+    setFilters(resetState);
     setSelectedSkills([]);
     setSkillInput("");
     
-    onFiltersChange({});
+    // Important: Pass the complete reset state to parent
+    onFiltersChange(resetState);
   };
   
   // Toggle section expansion
@@ -189,7 +195,7 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose, initialAppliedFil
               />
               <label htmlFor="applied-yes" className="text-sm">Jobs I've Applied To</label>
             </div>
-            <div className="flex items-center gap-2 text-gray-700">
+            {/* <div className="flex items-center gap-2 text-gray-700">
               <input
                 type="radio"
                 id="applied-no"
@@ -199,7 +205,7 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose, initialAppliedFil
                 onChange={() => handleFilterChange("appliedFilter", "not-applied")}
               />
               <label htmlFor="applied-no" className="text-sm">Jobs I Haven't Applied To</label>
-            </div>
+            </div> */}
           </div>
         </motion.div>
       </div>

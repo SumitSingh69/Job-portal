@@ -43,6 +43,7 @@ const JobBoard = () => {
   });
   const debounceTimerRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { isLoading: authLoading } = useContext(AuthContext);
   const axios = useAxios();
@@ -50,14 +51,14 @@ const JobBoard = () => {
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const appliedFilter = queryParams.get("appliedFilter");
+    const appliedFilter = queryParams.get("appliedFilter") || "all";
     
-    if (appliedFilter) {
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        appliedFilter
-      }));
-    }
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      appliedFilter
+    }));
+
+    setError(null);
   }, [location.search]);
 
 
@@ -66,15 +67,27 @@ const JobBoard = () => {
       try {
         setLoading(true);
         
-        let url = "/jobs";
-        const queryParams = new URLSearchParams();
+        // Authentication check removed - user is already logged in
+        // if ((filters.appliedFilter === "applied" || filters.appliedFilter === "not-applied") && 
+        //     (!authLoading && !axios.defaults.headers.common.Authorization)) {
+        //   setError("You need to sign in to view your applied jobs");
+        //   setLoading(false);
+        //   return;
+        // }
         
-        // Add applied filter
-        if (filters.appliedFilter && filters.appliedFilter !== "all") {
-          queryParams.append("appliedFilter", filters.appliedFilter);
+        let url = "/jobs"; 
+        
+        
+        if (filters.appliedFilter === "applied") {
+          url = "/job/applied/user"; 
+        } else if (filters.appliedFilter === "not-applied") {
+          url = "/jobs/not-applied"; 
         }
         
-        // Add other filters
+        const queryParams = new URLSearchParams();
+        queryParams.append("page", pagination.currentPage);
+        queryParams.append("limit", pagination.pageSize);
+        
         if (filters.companyId) queryParams.append("companyId", filters.companyId);
         if (filters.state) queryParams.append("state", filters.state);
         if (filters.city) queryParams.append("city", filters.city);
@@ -86,15 +99,20 @@ const JobBoard = () => {
           queryParams.append("skills", filters.skills.join(","));
         }
         
-        // Append query string to URL if there are filters
-        if (queryParams.toString()) {
-          url = `${url}?${queryParams.toString()}`;
-        }
+        const finalUrl = `${url}?${queryParams.toString()}`;
+        console.log("Fetching jobs with URL:", finalUrl);
         
-        const response = await axios.get(url);
+        const response = await axios.get(finalUrl);
         
         if (response.data.success) {
+          console.log(`Received ${response.data.jobs.length} jobs from server`);
           setJobs(response.data.jobs);
+          setFilteredJobs(response.data.jobs);
+          setPagination({
+            ...pagination,
+            totalPages: response.data.pagination.totalPages,
+            totalJobs: response.data.pagination.totalJobs || response.data.pagination.totalAppliedJobs || 0,
+          });
         } else {
           setError("Failed to fetch jobs");
         }
@@ -107,7 +125,7 @@ const JobBoard = () => {
     };
     
     fetchJobs();
-  }, [filters, axios]);
+  }, [filters, pagination.currentPage, pagination.pageSize, axios]);
 
   const displaySkills = (requirements) => {
     if (!Array.isArray(requirements)) return [];
@@ -132,16 +150,34 @@ const JobBoard = () => {
     const searchFilters = {
       title: searchTitle,
       city: searchLocation,
+      appliedFilter: filters.appliedFilter
     };
 
     const activeFilters = Object.fromEntries(
-      Object.entries(searchFilters).filter(([_, value]) => value !== "")
+      Object.entries(searchFilters).filter(([key, value]) => 
+        key === "appliedFilter" || value !== ""
+      )
     );
 
     applyFilters(activeFilters);
   };
 
   const handleFiltersChange = (newFilters) => {
+    // Authentication check removed - user is already logged in
+    // if ((newFilters.appliedFilter === "applied" || newFilters.appliedFilter === "not-applied") && 
+    //     (!authLoading && !axios.defaults.headers.common.Authorization)) {
+    //   // User is not authenticated, show error
+    //   setError("You need to sign in to view your applied jobs");
+    //   return;
+    // }
+    
+    // If the applied filter is changed, we want to reset to page 1
+    if (newFilters.appliedFilter !== filters.appliedFilter) {
+      setPagination(prev => ({
+        ...prev,
+        currentPage: 1
+      }));
+    }
     applyFilters(newFilters);
   };
 
@@ -153,62 +189,22 @@ const JobBoard = () => {
     setLoading(true);
 
     debounceTimerRef.current = setTimeout(async () => {
-      try {
-        const queryParams = new URLSearchParams();
-
-        
-        if (filterParams.appliedFilter && filterParams.appliedFilter !== "all") {
-          queryParams.append("appliedFilter", filterParams.appliedFilter);
-        }
-    
-
-        queryParams.append("page", pagination.currentPage);
-        queryParams.append("limit", pagination.pageSize);
-
-        queryParams.append("sort", "createdAt");
-        queryParams.append("order", "desc");
-
-        if (filterParams.title) queryParams.append("title", filterParams.title);
-        if (filterParams.city) queryParams.append("city", filterParams.city);
-        if (filterParams.state) queryParams.append("state", filterParams.state);
-        if (filterParams.country)
-          queryParams.append("country", filterParams.country);
-        if (filterParams.minSalary)
-          queryParams.append("minSalary", filterParams.minSalary);
-        if (filterParams.maxSalary)
-          queryParams.append("maxSalary", filterParams.maxSalary);
-        if (filterParams.status)
-          queryParams.append("status", filterParams.status);
-        if (filterParams.companyId)
-          queryParams.append("companyId", filterParams.companyId);
-
-        const response = await axios.get(`/jobs?${queryParams.toString()}`);
-
-        if (response.data.success) {
-          window.scrollTo(0, 0);
-          setJobs(response.data.jobs);
-          setFilteredJobs(
-            response.data.jobs.filter((job) => job.isDelete !== "Yes")
-          );
-          setPagination(response.data.pagination);
-        } else {
-          setError("Failed to filter jobs");
-        }
-
-        if (window.innerWidth < 768) {
-          setIsFiltersOpen(false);
-        }
-
-        navigate({
-          pathname: location.pathname,
-          search: queryParams.toString()
-        }, { replace: true });
-      } catch (error) {
-        console.error("Error applying filters:", error);
-        setError("Failed to filter jobs");
-      } finally {
-        setLoading(false);
+      setFilters(prev => ({
+        ...prev,
+        ...filterParams,
+      }));
+      
+      const queryParams = new URLSearchParams();
+      if (filterParams.appliedFilter && filterParams.appliedFilter !== "all") {
+        queryParams.append("appliedFilter", filterParams.appliedFilter);
       }
+      
+      navigate({
+        pathname: location.pathname,
+        search: queryParams.toString()
+      }, { replace: true });
+      
+      setLoading(false);
     }, 500);
   };
 
@@ -220,12 +216,10 @@ const JobBoard = () => {
     };
   }, []);
 
-  // Format salary from number to string with k format
   const formatSalary = (salary) => {
     return `$${Math.round(salary / 1000)}k`;
   };
 
-  // Calculate days since posted
   const calculateDaysAgo = (postedDate) => {
     const now = new Date();
     const posted = new Date(postedDate);
@@ -234,7 +228,6 @@ const JobBoard = () => {
     return diffDays;
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -250,7 +243,6 @@ const JobBoard = () => {
     visible: { opacity: 1, y: 0 },
   };
 
-  // Mobile filter drawer animation variants
   const drawerVariants = {
     hidden: { y: "100%" },
     visible: { y: 0 },
@@ -430,10 +422,24 @@ const JobBoard = () => {
                 <button
                   className="text-indigo-600 font-medium hover:text-indigo-800"
                   onClick={() => {
-                    setFilteredJobs(jobs);
+                    // Reset to initial state but keep appliedFilter
+                    const currentAppliedFilter = filters.appliedFilter;
+                    const resetFilters = {
+                      appliedFilter: currentAppliedFilter
+                    };
+                    setFilters(resetFilters);
                     setSearchTitle("");
                     setSearchLocation("");
                     setSelectedTags([]);
+                    
+                    // Apply the reset
+                    applyFilters(resetFilters);
+                    
+                    // Reset pagination
+                    setPagination(prev => ({
+                      ...prev,
+                      currentPage: 1
+                    }));
                   }}
                 >
                   Clear all filters
@@ -547,6 +553,12 @@ const JobBoard = () => {
                   <button
                     className="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                     disabled={pagination.currentPage === 1}
+                    onClick={() => {
+                      setPagination(prev => ({
+                        ...prev,
+                        currentPage: prev.currentPage - 1
+                      }));
+                    }}
                   >
                     Previous
                   </button>
@@ -558,6 +570,12 @@ const JobBoard = () => {
                           ? "bg-indigo-600 text-white"
                           : "border border-gray-300 text-gray-600 hover:bg-gray-50"
                       }`}
+                      onClick={() => {
+                        setPagination(prev => ({
+                          ...prev,
+                          currentPage: i + 1
+                        }));
+                      }}
                     >
                       {i + 1}
                     </button>
@@ -565,6 +583,12 @@ const JobBoard = () => {
                   <button
                     className="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
                     disabled={pagination.currentPage === pagination.totalPages}
+                    onClick={() => {
+                      setPagination(prev => ({
+                        ...prev,
+                        currentPage: prev.currentPage + 1
+                      }));
+                    }}
                   >
                     Next
                   </button>

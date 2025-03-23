@@ -80,143 +80,53 @@ export const getAllJobs = async (req, res, next) => {
       maxSalary,
       status,
       companyId,
-      includeApplicants = false,
-      appliedFilter = "all", // New parameter: "all", "applied", "not-applied"
     } = req.query;
 
-    // Build filters object
-    const filters = {};
+    // Basic filters that apply to all queries
+    const filters = { isDelete: "No" };
+    
+    // Add search filters
+    if (title) filters.title = { $regex: title, $options: "i" };
+    if (city) filters["location.city"] = { $regex: city, $options: "i" };
+    if (state) filters["location.state"] = { $regex: state, $options: "i" };
+    if (country) filters["location.country"] = { $regex: country, $options: "i" };
+    if (companyId) filters.companyId = companyId;
+    if (minSalary) filters.max_salary = { $gte: parseInt(minSalary) };
+    if (maxSalary) filters.min_salary = { $lte: parseInt(maxSalary) };
+    if (status) filters.status = status;
 
-    // Text search for title
-    if (title) {
-      filters.title = { $regex: title, $options: "i" };
-    }
-
-    // Location filtering - match nested properties correctly
-    if (city) {
-      filters["location.city"] = { $regex: city, $options: "i" };
-    }
-
-    if (state) {
-      filters["location.state"] = { $regex: state, $options: "i" };
-    }
-
-    if (country) {
-      filters["location.country"] = { $regex: country, $options: "i" };
-    }
-
-    // Company filtering
-    if (companyId) {
-      filters.companyId = companyId;
-    }
-
-    // Salary range filtering
-    if (minSalary) {
-      filters.max_salary = { $gte: parseInt(minSalary) };
-    }
-
-    if (maxSalary) {
-      filters.min_salary = { $lte: parseInt(maxSalary) };
-    }
-
-    // Status filtering
-    if (status) {
-      filters.status = status;
-    }
-
-    filters.isDelete = "No";
-
-    if (req.user && ["applied", "not-applied"].includes(appliedFilter)) {
-      // Get user's applied jobs
-      const user = await User.findById(req.user._id);
-      
-      console.log(`User found: ${!!user}`);
-      
-      if (user) {
-        const appliedJobIds = user.appliedJobs || [];
-        
-        console.log(`Applied jobs count: ${appliedJobIds.length}`);
-        console.log(`Applied jobs: ${JSON.stringify(appliedJobIds)}`);
-        
-        if (appliedFilter === "applied") {
-          if (appliedJobIds.length > 0) {
-            // Ensure IDs are properly converted to ObjectId
-            const objectIdArray = appliedJobIds.map(id => 
-              mongoose.Types.ObjectId(id.toString())
-            );
-            filters._id = { $in: objectIdArray };
-            console.log("Applied jobs filter applied");
-          } else {
-            // Return no results if user hasn't applied to any jobs
-            filters._id = { $in: [] };
-            console.log("Empty applied jobs filter applied");
-          }
-        } else if (appliedFilter === "not-applied") {
-          if (appliedJobIds.length > 0) {
-            try {
-              // Ensure IDs are properly converted to ObjectId
-              const objectIdArray = appliedJobIds.map(id => 
-                mongoose.Types.ObjectId(id.toString())
-              );
-              filters._id = { $nin: objectIdArray };
-              console.log("Not-applied jobs filter applied");
-            } catch (error) {
-              console.error("Error converting IDs:", error);
-              // Fallback - just use the original IDs
-              filters._id = { $nin: appliedJobIds };
-            }
-          } else {
-            // All jobs are "not-applied" if user hasn't applied to any
-            console.log("No not-applied filter needed (user has no applications)");
-          }
-        }
-      }
-    }
-
-    // Build sort object
+    // Create sort options
     const sortOptions = {};
     sortOptions[sort] = order === "asc" ? 1 : -1;
 
-    // Prepare the query
-    let jobsQuery = Job.find(filters)
+    // Execute query
+    const jobs = await Job.find(filters)
       .sort(sortOptions)
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit))
       .populate("createdBy", "name email")
       .populate("companyId", "name logo");
 
-    // Include applicants' details if requested
-    if (includeApplicants === 'true' || includeApplicants === true) {
-      jobsQuery = jobsQuery.populate({
-        path: "applicants_list",
-        select: "user_id skills years_of_experience location job_type",
-        populate: {
-          path: "user_id",
-          select: "name email"
-        }
-      });
-    }
-
-    // Execute query
-    const jobs = await jobsQuery;
-
-    // Get total count for pagination
+    // Count total matching jobs
     const totalJobs = await Job.countDocuments(filters);
 
-    // For each job, add a field indicating if current user has applied
+    // Add hasApplied flag to each job
+    let userAppliedJobIds = [];
+    if (req.user && req.user._id) {
+      const user = await User.findById(req.user._id);
+      if (user && user.appliedJobs) {
+        userAppliedJobIds = user.appliedJobs.map(id => id.toString());
+      }
+    }
+
     const enhancedJobs = jobs.map(job => {
       const jobObj = job.toObject();
-      if (req.user) {
-        const user = req.user;
-        jobObj.hasApplied = user.appliedJobs && user.appliedJobs.includes(job._id.toString());
-      } else {
-        jobObj.hasApplied = false;
-      }
+      jobObj.hasApplied = userAppliedJobIds.includes(job._id.toString());
       return jobObj;
     });
 
     // Return response
-    res.status(HTTPSTATUS.OK).json({
+    return res.status(HTTPSTATUS.OK).json({
       success: true,
       status: HTTPSTATUS.OK,
       message: "Jobs retrieved successfully",
@@ -229,6 +139,7 @@ export const getAllJobs = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error("Error retrieving jobs:", error);
     next(error);
   }
 };
@@ -658,6 +569,104 @@ export const getAppliedJobs = async (req, res, next) => {
       },
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+// New controller to get jobs the user hasn't applied to
+export const getNotAppliedJobs = async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sort = "createdAt",
+      order = "desc",
+      title,
+      city,
+      state,
+      country,
+      minSalary,
+      maxSalary,
+      status,
+      companyId,
+    } = req.query;
+
+    // Check for authenticated user
+    if (!req.user || !req.user._id) {
+      return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+        success: false,
+        status: HTTPSTATUS.UNAUTHORIZED,
+        message: "Authentication required",
+      });
+    }
+
+    // Get user
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "User not found",
+      });
+    }
+
+    // Build basic filters
+    const filters = { isDelete: "No" };
+    
+    // If user has applied to jobs, exclude them
+    if (user.appliedJobs && user.appliedJobs.length > 0) {
+      filters._id = { 
+        $nin: user.appliedJobs.map(id => new mongoose.Types.ObjectId(id.toString())) 
+      };
+    }
+    
+    // Add search filters
+    if (title) filters.title = { $regex: title, $options: "i" };
+    if (city) filters["location.city"] = { $regex: city, $options: "i" };
+    if (state) filters["location.state"] = { $regex: state, $options: "i" };
+    if (country) filters["location.country"] = { $regex: country, $options: "i" };
+    if (companyId) filters.companyId = companyId;
+    if (minSalary) filters.max_salary = { $gte: parseInt(minSalary) };
+    if (maxSalary) filters.min_salary = { $lte: parseInt(maxSalary) };
+    if (status) filters.status = status;
+
+    // Create sort options
+    const sortOptions = {};
+    sortOptions[sort] = order === "asc" ? 1 : -1;
+
+    // Execute query
+    const jobs = await Job.find(filters)
+      .sort(sortOptions)
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .populate("createdBy", "name email")
+      .populate("companyId", "name logo");
+
+    // Count total matching jobs
+    const totalJobs = await Job.countDocuments(filters);
+
+    // All jobs should have hasApplied = false
+    const enhancedJobs = jobs.map(job => {
+      const jobObj = job.toObject();
+      jobObj.hasApplied = false; // All jobs should be not-applied
+      return jobObj;
+    });
+
+    // Return response
+    return res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Not applied jobs retrieved successfully",
+      jobs: enhancedJobs,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(totalJobs / parseInt(limit)),
+        totalJobs,
+      },
+    });
+  } catch (error) {
+    console.error("Error retrieving not applied jobs:", error);
     next(error);
   }
 };
