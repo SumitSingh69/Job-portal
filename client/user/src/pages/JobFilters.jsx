@@ -10,10 +10,12 @@ import {
   ToggleRight, 
   Tag, 
   Briefcase,
-  RefreshCw
+  RefreshCw,
+  CheckCircle2, 
+  Filter  
 } from "lucide-react";
 
-const JobFilters = ({ onFiltersChange, isOpen = true, onClose }) => {
+const JobFilters = ({ onFiltersChange, isOpen = true, onClose, initialAppliedFilter = "all" }) => {
   // Initial state for all filters
   const [filters, setFilters] = useState({
     companyId: "",
@@ -25,7 +27,8 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose }) => {
     remote: false,
     fullTime: false,
     jobType: "",
-    skills: []
+    skills: [],
+    appliedFilter: initialAppliedFilter 
   });
   
   // State for selected skills
@@ -34,12 +37,19 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose }) => {
   
   // States for UI components
   const [expanded, setExpanded] = useState({
+    application: true, // New applied filter section
     location: true,
     company: true,
     salary: true,
     jobType: true,
     skills: true
   });
+
+  useEffect(() => {
+    if (initialAppliedFilter) {
+      handleFilterChange("appliedFilter", initialAppliedFilter);
+    }
+  }, [initialAppliedFilter]);
   
   // Available filter options
   const companies = [
@@ -94,7 +104,8 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose }) => {
       remote: false,
       fullTime: false,
       jobType: "",
-      skills: []
+      skills: [],
+      appliedFilter: "all" // Reset to "all" when resetting filters
     });
     
     setSelectedSkills([]);
@@ -130,9 +141,71 @@ const JobFilters = ({ onFiltersChange, isOpen = true, onClose }) => {
           Reset
         </button>
       </div>
+
+      {/* Application Status Filter - New Section */}
+      <div className="mb-6">
+        <div 
+          className="flex justify-between items-center cursor-pointer mb-3"
+          onClick={() => toggleExpand("application")}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-indigo-600" />
+            <h4 className="font-medium text-gray-800">Application Status</h4>
+          </div>
+          <motion.div 
+            animate={{ rotate: expanded.application ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <X className="w-4 h-4 text-gray-500 transform rotate-45" />
+          </motion.div>
+        </div>
+        
+        <motion.div
+          variants={contentVariants}
+          initial={expanded.application ? "visible" : "hidden"}
+          animate={expanded.application ? "visible" : "hidden"}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-gray-700">
+              <input
+                type="radio"
+                id="applied-all"
+                name="appliedFilter"
+                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                checked={filters.appliedFilter === "all"}
+                onChange={() => handleFilterChange("appliedFilter", "all")}
+              />
+              <label htmlFor="applied-all" className="text-sm">All Jobs</label>
+            </div>
+            <div className="flex items-center gap-2 text-gray-700">
+              <input
+                type="radio"
+                id="applied-yes"
+                name="appliedFilter"
+                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                checked={filters.appliedFilter === "applied"}
+                onChange={() => handleFilterChange("appliedFilter", "applied")}
+              />
+              <label htmlFor="applied-yes" className="text-sm">Jobs I've Applied To</label>
+            </div>
+            <div className="flex items-center gap-2 text-gray-700">
+              <input
+                type="radio"
+                id="applied-no"
+                name="appliedFilter"
+                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                checked={filters.appliedFilter === "not-applied"}
+                onChange={() => handleFilterChange("appliedFilter", "not-applied")}
+              />
+              <label htmlFor="applied-no" className="text-sm">Jobs I Haven't Applied To</label>
+            </div>
+          </div>
+        </motion.div>
+      </div>
       
       {/* Location Filter */}
-      <div className="mb-6">
+      <div className="mb-6 border-t border-gray-100 pt-6">
         <div 
           className="flex justify-between items-center cursor-pointer mb-3"
           onClick={() => toggleExpand("location")}

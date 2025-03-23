@@ -8,7 +8,7 @@ const jobsSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-
+  
   // Job Title and Description
   title: {
     type: String,
@@ -19,14 +19,14 @@ const jobsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  
+    
   companyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Companies",
     required: true,
     index: true,
   },
-
+  
   // Date job was posted
   postedDate: {
     type: Date,
@@ -34,7 +34,7 @@ const jobsSchema = new mongoose.Schema({
     default: Date.now,
     index: true,
   },
-
+  
   // Location (Object with city, state, country)
   location: {
     city: {
@@ -53,11 +53,11 @@ const jobsSchema = new mongoose.Schema({
     jobType: {
       type: String,
       required: true,
-      enum: ["remote","onsite"],
+      enum: ["remote", "onsite"],
       index: true,
     },
   },
-
+  
   // Job Requirements
   requirement: {
     type: [String],
@@ -67,14 +67,14 @@ const jobsSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
-  
+    
   // Application Deadline
   applicationDeadline: {
     type: Date,
     required: true,
     index: true,
   },
-
+  
   // Salary Range
   min_salary: {
     type: Number,
@@ -94,20 +94,21 @@ const jobsSchema = new mongoose.Schema({
     min: 0,
     index: true,
   },
-  
-  openings:{
+    
+  openings: {
     type: Number,
     required: true,
     min: 1,
     index: true,
   },
-  applicants:{
-    type : Number,
-    required : true,
-    default : 0,
-    index : true
-  },
   
+  applicants: {
+    type: Number,
+    required: true,
+    default: 0,
+    index: true
+  },
+    
   status: {
     type: String,
     required: true,
@@ -115,13 +116,21 @@ const jobsSchema = new mongoose.Schema({
     enum: ["open", "closed"],
     index: true,
   },
-
-  isDelete:{
-    type : String,
-    required : true,
-    default : "No",
-    enum : ['No' , "Yes"],
-    index : true
+  
+  // Job seekers who have applied to this job
+  applicants_list: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "JobSeeker",
+    default: [],
+    index: true
+  }],
+  
+  isDelete: {
+    type: String,
+    required: true,
+    default: "No",
+    enum: ['No', "Yes"],
+    index: true
   }
 }, { timestamps: true });
 

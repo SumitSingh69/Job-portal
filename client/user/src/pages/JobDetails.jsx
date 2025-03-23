@@ -6,6 +6,8 @@ const JobDetails = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [applyMessage, setApplyMessage] = useState("");
   const { id } = useParams();
   const axios = useAxios();
 
@@ -21,6 +23,8 @@ const JobDetails = () => {
         console.log(response.data);
         if (response.data.success) {
           setJob(response.data.job);
+          // Check if user has already applied for this job
+          await checkIfApplied();
         } else {
           setError("Failed to fetch job details");
         }
@@ -34,6 +38,41 @@ const JobDetails = () => {
     
     fetchJobDetails();
   }, [id, axios]);
+
+  // Check if the user has already applied for this job
+  const checkIfApplied = async () => {
+    try {
+      const response = await axios.get(`/job/applied/user`);
+      if (response.data.success) {
+        const jobExists = response.data.jobs.some(job => job._id === id);
+        setHasApplied(jobExists);
+      }
+    } catch (err) {
+      console.error("Error checking application status:", err);
+    }
+  };
+
+  const applyJob = async () => {
+    if (hasApplied) {
+      setApplyMessage("You have already applied for this job");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`/job/apply/${id}`);
+      console.log(response.data);
+      
+      if (response.data.success) {
+        setHasApplied(true);
+        setApplyMessage("Job applied successfully");
+      } else {
+        setApplyMessage(response.data.message || "Failed to apply for job");
+      }
+    } catch (err) {
+      console.error(err);
+      setApplyMessage(err.response?.data?.message || "An error occurred while applying");
+    }
+  };
 
   if (loading) {
     return (
@@ -121,12 +160,25 @@ const JobDetails = () => {
               </div>
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg text-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Apply Now
-              </button>
+              {hasApplied ? (
+                <div className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg text-lg font-semibold shadow-md flex items-center justify-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  You Have Already Applied
+                </div>
+              ) : (
+                <button 
+                  onClick={applyJob} 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg text-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  disabled={job.status === "closed"}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Apply Now 
+                </button>
+              )}
               <button className="flex-1 bg-white border border-gray-200 hover:border-gray-300 text-gray-700 py-3 px-6 rounded-lg text-lg font-medium transition-all duration-300 shadow-sm hover:shadow flex items-center justify-center gap-2">
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
@@ -134,6 +186,11 @@ const JobDetails = () => {
                 Save Job
               </button>
             </div>
+            {applyMessage && (
+              <div className={`mt-4 p-3 rounded-lg text-center ${hasApplied ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {applyMessage}
+              </div>
+            )}
           </div>
           <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border border-gray-100">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">

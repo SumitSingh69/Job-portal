@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -25,7 +25,7 @@ import { AuthContext } from "@/context/authContext";
 
 const JobBoard = () => {
   const [selectedTags, setSelectedTags] = useState([]);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false); // Mobile filters state
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false); 
   const [searchTitle, setSearchTitle] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
   const [jobs, setJobs] = useState([]);
@@ -38,47 +38,76 @@ const JobBoard = () => {
     totalPages: 1,
     totalJobs: 0,
   });
+  const [filters, setFilters] = useState({
+    appliedFilter: "all" 
+  });
   const debounceTimerRef = useRef(null);
+  const navigate = useNavigate();
 
   const { isLoading: authLoading } = useContext(AuthContext);
   const axios = useAxios();
   const jobPath = "/jobDetails";
 
   useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const appliedFilter = queryParams.get("appliedFilter");
+    
+    if (appliedFilter) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        appliedFilter
+      }));
+    }
+  }, [location.search]);
+
+
+  useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-
-        try {
-          const tempData = await axios.get("/jobs");
-          const jobsData = tempData.data;
-
-          if (jobsData.success && jobsData.jobs) {
-            setJobs(jobsData.jobs);
-            setFilteredJobs(
-              jobsData.jobs.filter((job) => job.isDelete !== "Yes")
-            );
-            setPagination(jobsData.pagination);
-          }
-        } catch (e) {
-          console.log("Using mock data due to API error:", e);
-          setJobs(null);
-          setFilteredJobs(null);
-          setPagination(null);
-          setError(null);
+        
+        let url = "/jobs";
+        const queryParams = new URLSearchParams();
+        
+        // Add applied filter
+        if (filters.appliedFilter && filters.appliedFilter !== "all") {
+          queryParams.append("appliedFilter", filters.appliedFilter);
         }
-      } catch (e) {
-        console.error("Error fetching data", e);
-        setError("Failed to load jobs");
+        
+        // Add other filters
+        if (filters.companyId) queryParams.append("companyId", filters.companyId);
+        if (filters.state) queryParams.append("state", filters.state);
+        if (filters.city) queryParams.append("city", filters.city);
+        if (filters.minSalary) queryParams.append("minSalary", filters.minSalary);
+        if (filters.maxSalary) queryParams.append("maxSalary", filters.maxSalary);
+        if (filters.jobType) queryParams.append("jobType", filters.jobType);
+        if (filters.remote) queryParams.append("remote", "true");
+        if (filters.skills && filters.skills.length > 0) {
+          queryParams.append("skills", filters.skills.join(","));
+        }
+        
+        // Append query string to URL if there are filters
+        if (queryParams.toString()) {
+          url = `${url}?${queryParams.toString()}`;
+        }
+        
+        const response = await axios.get(url);
+        
+        if (response.data.success) {
+          setJobs(response.data.jobs);
+        } else {
+          setError("Failed to fetch jobs");
+        }
+      } catch (err) {
+        setError("An error occurred while fetching jobs");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
-    if (!authLoading) {
-      fetchJobs();
-    }
-  }, [authLoading, axios]);
+    
+    fetchJobs();
+  }, [filters, axios]);
 
   const displaySkills = (requirements) => {
     if (!Array.isArray(requirements)) return [];
@@ -127,6 +156,12 @@ const JobBoard = () => {
       try {
         const queryParams = new URLSearchParams();
 
+        
+        if (filterParams.appliedFilter && filterParams.appliedFilter !== "all") {
+          queryParams.append("appliedFilter", filterParams.appliedFilter);
+        }
+    
+
         queryParams.append("page", pagination.currentPage);
         queryParams.append("limit", pagination.pageSize);
 
@@ -163,6 +198,11 @@ const JobBoard = () => {
         if (window.innerWidth < 768) {
           setIsFiltersOpen(false);
         }
+
+        navigate({
+          pathname: location.pathname,
+          search: queryParams.toString()
+        }, { replace: true });
       } catch (error) {
         console.error("Error applying filters:", error);
         setError("Failed to filter jobs");
@@ -332,7 +372,10 @@ const JobBoard = () => {
               </div>
 
               {/* Always show filters on desktop */}
-              <JobFilters onFiltersChange={handleFiltersChange} />
+              <JobFilters 
+                onFiltersChange={handleFiltersChange} 
+                initialAppliedFilter={filters.appliedFilter}
+              />
             </motion.div>
           </div>
 

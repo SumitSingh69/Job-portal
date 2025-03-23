@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 const jobseekerSchema = new mongoose.Schema({
   // User Information
-  job_seeker_id: {
-    type: mongoose.Schema.ObjectId,
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
     unique: true,
@@ -32,8 +32,8 @@ const jobseekerSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
-  
-  year_of_experience: {
+    
+  years_of_experience: {
     type: Number,
     required: true,
     min: 0,
@@ -41,9 +41,9 @@ const jobseekerSchema = new mongoose.Schema({
 
   // Location Preferences
   location: {
-    city: { 
+    city: {
       type: String,
-      default: "Not specified" 
+      default: "Not specified"
     },
     state: {
       type: String,
@@ -54,7 +54,7 @@ const jobseekerSchema = new mongoose.Schema({
       default: "Not specified",
     },
   },
-  preferred_location: [
+  preferred_locations: [
     {
       city: { type: String },
       state: { type: String },
@@ -78,13 +78,26 @@ const jobseekerSchema = new mongoose.Schema({
     enum: ["immediately", "within_a_month", "3_months", "not_available"],
     default: "immediately",
   },
-  
+    
   job_type: {
     type: String,
     required: true,
     enum: ["full_time", "part_time", "internship"],
   },
-});
 
-const Jobseeker = mongoose.model("Jobseeker", jobseekerSchema);
-export default Jobseeker;
+  // Track applied jobs
+  applied_jobs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Jobs"
+  }]
+}, { timestamps: true });
+
+// Add indexes for better query performance
+jobseekerSchema.index({ user_id: 1 });
+jobseekerSchema.index({ skills: 1 });
+jobseekerSchema.index({ years_of_experience: 1 });
+jobseekerSchema.index({ "location.country": 1 });
+jobseekerSchema.index({ job_type: 1 });
+
+const JobSeeker = mongoose.model("JobSeeker", jobseekerSchema);
+export default JobSeeker;

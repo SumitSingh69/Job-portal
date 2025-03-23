@@ -19,12 +19,11 @@ import { AuthContext } from "@/context/authContext";
 import useAxios from "@/hooks/useAxios";
 import toast from "@/components/custom/toast";
 
-
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const location = useLocation();
-  const {user, logout} = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const axios = useAxios();
 
   const logoutUser = async () => {
@@ -38,7 +37,7 @@ const Navbar = () => {
   };
 
   const navigate = useNavigate();
-  
+
   const isLoggedIn = !!user?.id;
   // console.log(user)
   const navItems = [
@@ -82,9 +81,8 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-
     const response = await logoutUser();
-    if(response.success){
+    if (response.success) {
       toast.success(response.message);
       await logout();
       navigate("/login");
@@ -149,8 +147,8 @@ const Navbar = () => {
               {isLoggedIn ? (
                 <div className="flex items-center space-x-4">
                   {/* Notifications */}
-                  {user.role === 'jobseeker' ? "hello" : null}
-                  
+                  {user.role === "jobseeker" ? "hello" : null}
+
                   {/* User Profile Dropdown */}
                   <div className="relative">
                     <motion.button
@@ -166,7 +164,7 @@ const Navbar = () => {
                       </div>
                       <span>{user.firstName}</span>
                     </motion.button>
-                    
+
                     <AnimatePresence>
                       {isProfileOpen && (
                         <motion.div
@@ -184,11 +182,12 @@ const Navbar = () => {
                               {user.email}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                              Role: <span className="capitalize">{user.role}</span>
+                              Role:{" "}
+                              <span className="capitalize">{user.role}</span>
                             </p>
                           </div>
-                          <Link 
-                            to="/profile" 
+                          <Link
+                            to="/profile"
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             onClick={() => setIsProfileOpen(false)}
                           >
@@ -197,8 +196,8 @@ const Navbar = () => {
                               <span>My Profile</span>
                             </div>
                           </Link>
-                          <Link 
-                            to="/applications" 
+                          <Link
+                            to="/jobs?appliedFilter=applied"
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             onClick={() => setIsProfileOpen(false)}
                           >
@@ -207,7 +206,7 @@ const Navbar = () => {
                               <span>My Applications</span>
                             </div>
                           </Link>
-                          <button 
+                          <button
                             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                             onClick={handleLogout}
                           >
@@ -308,12 +307,10 @@ const Navbar = () => {
                           <p className="text-sm font-medium">
                             {user.firstName} {user.lastName}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            {user.email}
-                          </p>
+                          <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
                       </div>
-                      
+
                       <motion.div
                         whileHover="hover"
                         whileTap="tap"
@@ -328,7 +325,7 @@ const Navbar = () => {
                           <span>My Profile</span>
                         </Link>
                       </motion.div>
-                      
+
                       <motion.div
                         whileHover="hover"
                         whileTap="tap"
@@ -343,7 +340,7 @@ const Navbar = () => {
                           <span>My Applications</span>
                         </Link>
                       </motion.div>
-                      
+
                       <motion.button
                         whileHover="hover"
                         whileTap="tap"
