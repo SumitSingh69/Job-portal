@@ -107,7 +107,7 @@ const jobsSchema = new mongoose.Schema({
     default : 0,
     index : true
   },
-
+  
   status: {
     type: String,
     required: true,

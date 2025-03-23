@@ -32,3 +32,5 @@ export const isAnyUser = checkRole([UserRole.JOBSEEKER, UserRole.RECRUITER]);
 export const isAdmin = checkRole(UserRole.ADMIN);
 
 export const isAnyRecruiterOrAdmin = checkRole([UserRole.RECRUITER, UserRole.ADMIN]);
+
+export const isAnyRecruiterOrAdminOrJobseeker = checkRole([UserRole.RECRUITER, UserRole.ADMIN, UserRole.JOBSEEKER]);

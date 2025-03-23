@@ -5,16 +5,21 @@
 Welcome to the JobConnect API documentation. This guide provides comprehensive information about our backend services that power the JobConnect platform. The API is designed to be intuitive, well-structured, and scalable to support the needs of our recruitment platform.
 
 ## Recent Updates (March 14, 2023)
+- Ongoing development and improvements to the JobConnect API.
+- Added a new `/welcome` endpoint that returns a JSON response with a welcome message.
+- Implemented logging functionality to capture request metadata, enhancing monitoring and debugging capabilities.
 
 ### Controller Updates
-- Enhanced `job.controller.js` with improved error handling and validation
-- Added `job-seeker.controller.js` for managing job seeker specific operations
-- Optimized database queries for better performance
+- Enhanced `job.controller.js` with improved error handling and validation.
+- Added `job-seeker.controller.js` for managing job seeker specific operations.
+- Optimized database queries for better performance.
+- Updated user authentication routes in `user.routes.js` for improved security.
+- Updated dependencies in `package.json` for better performance and security.
 
 ### Model Updates
-- Updated `jobs.Model.js` with improved schema structure
-- Added proper indexing for faster job search operations
-- Enhanced relationship between jobs and companies
+- Updated `jobs.Model.js` with improved schema structure.
+- Added proper indexing for faster job search operations.
+- Enhanced relationship between jobs and companies.
 
 ## Quick Start Guide
 
@@ -48,7 +53,7 @@ Welcome to the JobConnect API documentation. This guide provides comprehensive i
    ```
 
 5. **Verify the installation**
-   The API should now be running at `http://localhost:4000`
+   The API should now be running at `http://localhost:4000`.
 
 ## System Architecture
 
@@ -69,10 +74,10 @@ jobconnect-api/
 
 ### Key Components
 
-- **Controllers**: Handle business logic for each API endpoint
-- **Models**: Define database structure and relationships
-- **Routes**: Map HTTP requests to controller functions
-- **Middleware**: Process requests before they reach controllers
+- **Controllers**: Handle business logic for each API endpoint.
+- **Models**: Define database structure and relationships.
+- **Routes**: Map HTTP requests to controller functions.
+- **Middleware**: Process requests before they reach controllers.
 
 ## Data Models
 
@@ -192,8 +197,8 @@ The Application model tracks job applications.
 
 JobConnect uses JSON Web Tokens (JWT) for secure authentication:
 
-1. **Access Token**: Short-lived token (24 hours) for API requests
-2. **Refresh Token**: Long-lived token (7 days) to get new access tokens
+1. **Access Token**: Short-lived token (24 hours) for API requests.
+2. **Refresh Token**: Long-lived token (7 days) to get new access tokens.
 
 ### Using Authentication
 
@@ -202,7 +207,7 @@ JobConnect uses JSON Web Tokens (JWT) for secure authentication:
    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
 
-2. When the access token expires, use the refresh endpoint to get a new one
+2. When the access token expires, use the refresh endpoint to get a new one.
 
 ## File Uploads
 
@@ -274,24 +279,24 @@ MAX_FILE_SIZE=5000000  # 5MB
 
 ![Database Relationship Diagram](https://via.placeholder.com/800x600?text=Database+Relationships)
 
-- A **Recruiter** belongs to one **Company**
-- A **Company** can have many **Jobs**
-- A **Jobseeker** can apply to many **Jobs**
-- A **Job** can receive many **Applications**
+- A **Recruiter** belongs to one **Company**.
+- A **Company** can have many **Jobs**.
+- A **Jobseeker** can apply to many **Jobs**.
+- A **Job** can receive many **Applications**.
 
 ## Development Guidelines
 
 ### Code Style
 
-- Use ESLint for JavaScript linting
-- Follow the Airbnb JavaScript Style Guide
-- Use async/await for asynchronous operations
+- Use ESLint for JavaScript linting.
+- Follow the Airbnb JavaScript Style Guide.
+- Use async/await for asynchronous operations.
 
 ### Git Workflow
 
-1. Create feature branches from main: `feature/feature-name`
-2. Make pull requests for code review
-3. Squash commits when merging
+1. Create feature branches from main: `feature/feature-name`.
+2. Make pull requests for code review.
+3. Squash commits when merging.
 
 ### Testing
 

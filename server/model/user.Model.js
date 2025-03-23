@@ -55,6 +55,12 @@ const userSchema = new mongoose.Schema(
       minlength: [10, "Phone number must be at least 10 digits long"],
     },
 
+    appliedJobs: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Job",
+      index: true,
+    },
+
     refreshToken: {
       type: String,
       optional: true,

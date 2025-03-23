@@ -1,5 +1,8 @@
 import { HTTPSTATUS } from "../config/https.config.js";
 import Job from "../model/jobs.Model.js";
+import User from "../model/user.Model.js";
+import mongoose from "mongoose";
+
 
 export const createJob = async (req, res, next) => {
   try {
@@ -174,14 +177,17 @@ export const deleteJob = async (req, res, next) => {
       });
     }
 
-    await Job.findByIdAndUpdate(req.params.id, { isDelete: "Yes" }, { new: true });
+    await Job.findByIdAndUpdate(
+      req.params.id,
+      { isDelete: "Yes" },
+      { new: true }
+    );
 
     res.status(HTTPSTATUS.OK).json({
       success: true,
       status: HTTPSTATUS.OK,
       message: "Job deleted successfully",
     });
-
   } catch (error) {
     next(error);
   }
@@ -194,7 +200,7 @@ export const getJobByCompanyId = async (req, res, next) => {
 
     const jobs = await Job.find({
       companyId: req.params.id,
-      isDelete: "No"
+      isDelete: "No",
     })
       .sort(sortOptions)
       .skip((parseInt(page) - 1) * parseInt(limit))
@@ -204,7 +210,7 @@ export const getJobByCompanyId = async (req, res, next) => {
 
     const totalJobs = await Job.countDocuments({
       companyId: req.params.id,
-      isDelete: "No"
+      isDelete: "No",
     });
 
     res.status(HTTPSTATUS.OK).json({
@@ -219,12 +225,10 @@ export const getJobByCompanyId = async (req, res, next) => {
         totalJobs,
       },
     });
-
   } catch (error) {
     next(error);
   }
 };
-
 
 export const getJobByUserId = async (req, res, next) => {
   try {
@@ -257,3 +261,164 @@ export const getJobByUserId = async (req, res, next) => {
   }
 };
 
+export const applyJob = async (req, res, next) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job || job.isDelete === "Yes") {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        status: HTTPSTATUS.NOT_FOUND,
+        message: "Job not found or has been deleted",
+      });
+    }
+
+    if (job.status === "closed") {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        status: HTTPSTATUS.BAD_REQUEST,
+        message: "Job applications are closed",
+      });
+    }
+
+    const userId = req.user._id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        status: HTTPSTATUS.BAD_REQUEST,
+        message: "Invalid user ID format",
+      });
+    }
+    const user = await User.findById(userId);
+
+    if (user.appliedJobs.includes(req.params.id)) {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        status: HTTPSTATUS.BAD_REQUEST,
+        message: "You have already applied for this job",
+      });
+    }
+
+    await Job.findByIdAndUpdate(req.params.id, { $inc: { applicants: 1 } });
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { appliedJobs: req.params.id },
+    });
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      status: HTTPSTATUS.OK,
+      message: "Job applied successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const closeJob = async (req, res, next) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    if (job.status === "closed") {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Job is already closed",
+      });
+    }
+
+    job.status = "closed";
+    await job.save();
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      message: "Job closed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reopenJob = async (req, res, next) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    if (job.status === "open") {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Job is already open",
+      });
+    }
+
+    job.status = "open";
+    await job.save();
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      message: "Job reopened successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAppliedJobsByUserId = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const sortOptions = { createdAt: -1 };
+
+    const userId = req.user._id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        success: false,
+        message: "Invalid user ID format",
+      });
+    }
+    const user = await User.findById(userId).populate({
+      path: "appliedJobs",
+      model: "Jobs", 
+      populate: { 
+        path: "companyId", 
+        model: "Companies",
+        select: "name logo" 
+      },
+    });
+    if (!user) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const totalJobs = user.appliedJobs.length;
+    const appliedJobs = user.appliedJobs
+      .slice((page - 1) * limit, page * limit)
+      .map((job) => ({
+        ...job.toObject(),
+        company: job.companyId,
+      }));
+
+    res.status(HTTPSTATUS.OK).json({
+      success: true,
+      message: "Applied jobs retrieved successfully",
+      jobs: appliedJobs,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(totalJobs / limit),
+        totalJobs,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
