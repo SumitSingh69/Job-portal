@@ -75,8 +75,7 @@ const JobBoard = () => {
         //   return;
         // }
         
-        let url = "/jobs"; 
-        
+        let url = "/jobs";
         
         if (filters.appliedFilter === "applied") {
           url = "/job/applied/user"; 

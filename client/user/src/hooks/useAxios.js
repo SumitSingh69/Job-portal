@@ -6,13 +6,13 @@ import { useNavigate } from "react-router-dom";
 
 // Custom React hook for creating an authenticated axios instance
 const useAxios = () => {
-  const { token, refreshAccessToken, logout } = useContext(AuthContext);
+  const { token, refreshAccessToken, logout, isLoading } = useContext(AuthContext);
   const navigate = useNavigate();
   
   // Create memoized axios instance that persists between renders
   const axiosInstance = useMemo(() => {
     const instance = axios.create({
-      baseURL: "http://localhost:4000/api",
+      baseURL: "http://localhost:4000/api", // Your API base URL
       timeout: 10000,
       headers: {
         "Content-Type": "application/json",
@@ -22,42 +22,69 @@ const useAxios = () => {
     // Request interceptor to add the token to every request
     instance.interceptors.request.use(
       async (config) => {
-        // If no token, redirect to login
-        if (!token) {
+        // If auth is still loading, wait for it
+        if (isLoading) {
+          // Wait for auth to complete loading
+          await new Promise(resolve => {
+            const checkLoading = () => {
+              if (!isLoading) {
+                resolve();
+              } else {
+                setTimeout(checkLoading, 100);
+              }
+            };
+            checkLoading();
+          });
+        }
+
+        // Get the current token from localStorage
+        const currentToken = localStorage.getItem("token");
+        
+        // If no token and the endpoint is not public, redirect to login
+        if (!currentToken && !config.url.includes('/public')) {
           navigate("/login");
           return Promise.reject("No auth token available");
         }
         
-        // Add authorization header with current token
-        config.headers.Authorization = `Bearer ${token}`;
-        
-        // Check if token is expired
-        try {
-          const user = jwtDecode(token);
-          const isExpired = user.exp ? user.exp * 1000 < Date.now() : false;
+        // Add authorization header if token exists
+        if (currentToken) {
+          config.headers.Authorization = `Bearer ${currentToken}`;
+;
           
-          // If not expired, proceed with request
-          if (!isExpired) {
-            return config;
-          }
-          
-          // If expired, try to refresh the token using the context function
+          // Check if token is expired
           try {
-            const newAccessToken = await refreshAccessToken();
+            const user = jwtDecode(currentToken);
+            const isExpired = user.exp ? user.exp * 1000 < Date.now() : false;
             
-            // Update authorization header with new token
-            config.headers.Authorization = `Bearer ${newAccessToken}`;
+            if (!isExpired) {
+              return config;
+            }
+            
+            try {
+              const result = await refreshAccessToken();
+              
+              if (result.success) {
+                config.headers.Authorization = `Bearer ${currentToken}`;
+;
+                return config;
+              } else {
+                logout();
+                navigate("/login");
+                return Promise.reject("Token refresh failed");
+              }
+            } catch (refreshError) {
+              console.error("Error refreshing token:", refreshError);
+              logout();
+              navigate("/login");
+              return Promise.reject(refreshError);
+            }
+          } catch (error) {
+            console.error("Token validation error:", error);
             return config;
-          } catch (refreshError) {
-            console.error("Error refreshing token:", refreshError);
-            logout();
-            navigate("/login");
-            return Promise.reject(refreshError);
           }
-        } catch (error) {
-          console.error("Token validation error:", error);
-          return config; // Still try the request in case of decode error
         }
+        
+        return config;
       },
       (error) => Promise.reject(error)
     );
@@ -76,7 +103,7 @@ const useAxios = () => {
     );
     
     return instance;
-  }, [token, refreshAccessToken, logout, navigate]);
+  }, [token, refreshAccessToken, logout, navigate, isLoading]);
   
   return axiosInstance;
 };

@@ -7,7 +7,7 @@ const router = Router();
 
 router.post("/job/create", verifyAccessToken, isAnyRecruiterOrAdmin, createJob);
 router.get("/job/:id", verifyAccessToken, isAnyRecruiterOrAdmin, getJobById);
-router.get("/jobs", getAllJobs);
+router.get("/jobs", verifyAccessToken , getAllJobs);
 router.get("/jobs/not-applied", verifyAccessToken, getNotAppliedJobs);
 
 router.put("/job/:id", verifyAccessToken, isAnyRecruiterOrAdminOrJobseeker , updateJob);

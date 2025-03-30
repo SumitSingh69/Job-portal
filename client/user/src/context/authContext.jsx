@@ -1,4 +1,6 @@
 import { createContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 export const AuthContext = createContext();
 
@@ -7,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null);
     const [refreshToken, setRefreshToken] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
     
     const API_BASE_URL = "http://localhost:4000/api";
     
