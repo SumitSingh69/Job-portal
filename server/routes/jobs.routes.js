@@ -6,7 +6,7 @@ import { isAnyRecruiterOrAdmin, isAnyRecruiterOrAdminOrJobseeker, isJobseeker } 
 const router = Router();
 
 router.post("/job/create", verifyAccessToken, isAnyRecruiterOrAdmin, createJob);
-router.get("/job/:id", verifyAccessToken, isAnyRecruiterOrAdmin, getJobById);
+router.get("/job/:id", verifyAccessToken, isAnyRecruiterOrAdminOrJobseeker, getJobById);
 router.get("/jobs", verifyAccessToken , getAllJobs);
 router.get("/jobs/not-applied", verifyAccessToken, getNotAppliedJobs);
 
