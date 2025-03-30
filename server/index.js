@@ -9,6 +9,7 @@ import ErrorHandler from "./middleware/ErrorHandler.js";
 import companyRouter from "./routes/company.routes.js";
 import jobRouter from "./routes/jobs.routes.js";
 import adminRouter from "./routes/admin.routes.js";
+import jobseeker from "./routes/job-seeker.routes.js";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use('/api', indexRouter);
 app.use('/api', companyRouter);
 app.use('/api', jobRouter);
 app.use('/api', adminRouter);
+app.use('/api', jobseeker);
 
 connectDB().then(() => {
     app.listen(PORT, () => {

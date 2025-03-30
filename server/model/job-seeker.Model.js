@@ -8,11 +8,17 @@ const jobseekerSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  gender: {
+    type: String,
+    enum: ["male", "female", "other", "prefer_not_to_say"],
+  },
+  dob: {
+    type: Date,
+  },
 
   // Resume and Profile Picture
   resume: {
     type: String,
-    required: true,
     match: [
       /^(https?:\/\/.*\.(?:pdf|docx|txt))$/,
       "Please provide a valid resume URL",
@@ -20,23 +26,110 @@ const jobseekerSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
-    required: true,
     match: [
       /^(https?:\/\/.*\.(?:jpg|jpeg|png|gif))$/,
       "Please provide a valid photo URL",
     ],
   },
 
-  // Skills and Experience
+  // Qualifications and Experience
+  languages: {
+    type: [String],
+    default: [],
+  },
+  
+  work_experience: [
+    {
+      type: {
+        type: String,
+        enum: ["internship", "full-time", "part-time", "freelance"],
+      },
+      level: {
+        type: String,
+        enum: ["fresher", "experienced"],
+      },
+      company: {
+        type: String,
+      },
+      role: {
+        type: String,
+      },
+      start_date: {
+        type: Date,
+      },
+      end_date: {
+        type: Date,
+      },
+      current: {
+        type: Boolean,
+        default: false,
+      },
+      description: {
+        type: String,
+      }
+    }
+  ],
+  
+  education: [
+    {
+      level: {
+        type: String,
+        enum: ["high_school", "intermediate", "diploma", "bachelor", "master", "phd", "other"],
+      },
+      institution: {
+        type: String,
+      },
+      field_of_study: {
+        type: String,
+      },
+      start_date: {
+        type: Date,
+      },
+      end_date: {
+        type: Date,
+      },
+      current: {
+        type: Boolean,
+        default: false,
+      },
+      grade: {
+        type: String,
+      }
+    }
+  ],
+  
+  certifications: [
+    {
+      name: {
+        type: String,
+      },
+      issuing_organization: {
+        type: String,
+      },
+      issue_date: {
+        type: Date,
+      },
+      expiry_date: {
+        type: Date,
+      },
+      credential_id: {
+        type: String,
+      },
+      credential_url: {
+        type: String,
+      }
+    }
+  ],
+  
   skills: {
     type: [String],
-    required: true,
+    default: [],
   },
-    
+  
   years_of_experience: {
     type: Number,
-    required: true,
     min: 0,
+    default: 0,
   },
 
   // Location Preferences
@@ -54,6 +147,7 @@ const jobseekerSchema = new mongoose.Schema({
       default: "Not specified",
     },
   },
+  
   preferred_locations: [
     {
       city: { type: String },
@@ -72,17 +166,21 @@ const jobseekerSchema = new mongoose.Schema({
       type: Number,
       min: 0,
     },
+    currency: {
+      type: String,
+      default: "USD",
+    }
   },
+  
   availability_status: {
     type: String,
     enum: ["immediately", "within_a_month", "3_months", "not_available"],
     default: "immediately",
   },
-    
+  
   job_type: {
     type: String,
-    required: true,
-    enum: ["full_time", "part_time", "internship"],
+    enum: ["full_time", "part_time",  "internship", "freelance"],
   },
 
   // Track applied jobs
@@ -98,6 +196,9 @@ jobseekerSchema.index({ skills: 1 });
 jobseekerSchema.index({ years_of_experience: 1 });
 jobseekerSchema.index({ "location.country": 1 });
 jobseekerSchema.index({ job_type: 1 });
+jobseekerSchema.index({ gender: 1 });
+jobseekerSchema.index({ dob: 1 });
+jobseekerSchema.index({ "education.level": 1 });
 
 const JobSeeker = mongoose.model("JobSeeker", jobseekerSchema);
 export default JobSeeker;

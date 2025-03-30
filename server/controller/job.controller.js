@@ -3,6 +3,7 @@ import Job from "../model/jobs.Model.js";
 import User from "../model/user.Model.js";
 import mongoose from "mongoose";
 import JobSeeker from "../model/job-seeker.Model.js";
+import Applications from "../model/applications.Model.js";
 
 export const createJob = async (req, res, next) => {
   try {
@@ -257,106 +258,6 @@ export const getJobByUserId = async (req, res, next) => {
         totalJobs,
       },
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const applyJob = async (req, res, next) => {
-  try {
-    const job = await Job.findById(req.params.id);
-    if (!job || job.isDelete === "Yes") {
-      return res.status(HTTPSTATUS.NOT_FOUND).json({
-        success: false,
-        status: HTTPSTATUS.NOT_FOUND,
-        message: "Job not found or has been deleted",
-      });
-    }
-
-    if (job.status === "closed") {
-      return res.status(HTTPSTATUS.BAD_REQUEST).json({
-        success: false,
-        status: HTTPSTATUS.BAD_REQUEST,
-        message: "Job applications are closed",
-      });
-    }
-
-    const userId = req.user._id;
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(HTTPSTATUS.BAD_REQUEST).json({
-        success: false,
-        status: HTTPSTATUS.BAD_REQUEST,
-        message: "Invalid user ID format",
-      });
-    }
-    
-    // Find the user and their JobSeeker profile
-    const user = await User.findById(userId);
-    
-    // Check if user has already applied
-    if (user.appliedJobs && user.appliedJobs.includes(req.params.id)) {
-      return res.status(HTTPSTATUS.BAD_REQUEST).json({
-        success: false,
-        status: HTTPSTATUS.BAD_REQUEST,
-        message: "You have already applied for this job",
-      });
-    }
-    
-    // Find job seeker profile
-    // const jobSeeker = await JobSeeker.findOne({ user_id: userId });
-    
-    // if (!jobSeeker) {
-    //   return res.status(HTTPSTATUS.NOT_FOUND).json({
-    //     success: false,
-    //     status: HTTPSTATUS.NOT_FOUND,
-    //     message: "JobSeeker profile not found. Please complete your profile before applying.",
-    //   });
-    // }
-    
-    // Start a session for transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    
-    try {
-      // Update job with new applicant
-      await Job.findByIdAndUpdate(
-        req.params.id, 
-        { 
-          $inc: { applicants: 1 },
-          $addToSet: { applicants_list: jobSeeker._id }
-        },
-        { session }
-      );
-      
-      // Update user with applied job
-      await User.findByIdAndUpdate(
-        userId,
-        { $addToSet: { appliedJobs: req.params.id } },
-        { session }
-      );
-      
-      // Update job seeker with applied job
-      await JobSeeker.findByIdAndUpdate(
-        jobSeeker._id,
-        { $addToSet: { applied_jobs: req.params.id } },
-        { session }
-      );
-      
-      // Commit the transaction
-      await session.commitTransaction();
-      session.endSession();
-      
-      res.status(HTTPSTATUS.OK).json({
-        success: true,
-        status: HTTPSTATUS.OK,
-        message: "Job applied successfully",
-      });
-    } catch (error) {
-      // If an error occurs, abort the transaction
-      await session.abortTransaction();
-      session.endSession();
-      throw error;
-    }
   } catch (error) {
     next(error);
   }
@@ -669,4 +570,197 @@ export const getNotAppliedJobs = async (req, res, next) => {
     console.error("Error retrieving not applied jobs:", error);
     next(error);
   }
+};
+
+export const applyForJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { _id } = req.user;
+    const jobSeekerId = _id;
+
+    // Validate jobId and jobSeekerId format
+    if (!mongoose.Types.ObjectId.isValid(jobSeekerId) || !mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+
+    // Fetch job and job seeker
+    const job = await Job.findById(jobId);
+    const jobSeeker = await JobSeeker.findOne({ user_id: jobSeekerId });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (!jobSeeker) {
+      return res.status(404).json({ message: "Job-seeker not found" });
+    }
+
+    // Check if job is open
+    if (job.status === "closed") {
+      return res.status(400).json({ message: "Job applications are closed" });
+    }
+
+    // Check if job seeker has already applied
+    const existingApplication = await Applications.findOne({ 
+      jobId: jobId.toString(), 
+      userId: jobSeekerId.toString() 
+    });
+    
+    if (existingApplication) {
+      return res.status(409).json({ message: "You have already applied for this job" });
+    }
+
+    // Check if job seeker's profile is complete enough to apply
+    const profileStatus = checkProfileCompletionStatus(jobSeeker);
+    if (profileStatus.essentialCompletionPercentage < 80) {
+      return res.status(400).json({
+        message: "Your profile is not complete enough to apply for jobs",
+        profileStatus,
+        requiredFields: profileStatus.missingEssentialFields,
+      });
+    }
+
+    // Create a new application with fields matching the schema
+    const applicationId = new mongoose.Types.ObjectId().toString();
+    const application = new Applications({
+      id: applicationId,
+      userId: jobSeekerId.toString(),
+      jobId: jobId.toString(),
+      applicationDate: new Date(),
+      status: "submited",
+    });
+    
+    await application.save();
+
+    // Update job's applicants count and list
+    job.applicants += 1;
+    job.applicants_list.push(jobSeekerId);
+    await job.save();
+
+    // Update job seeker: add job to applied_jobs
+    if (!jobSeeker.applied_jobs) {
+      jobSeeker.applied_jobs = [];
+    }
+    jobSeeker.applied_jobs.push(jobId);
+    await jobSeeker.save();
+
+    // Also update the User's appliedJobs array if a user ID is associated
+    if (jobSeeker.user_id) {
+      const user = await User.findById(jobSeeker.user_id);
+      if (user) {
+        if (!user.appliedJobs) {
+          user.appliedJobs = [];
+        }
+        user.appliedJobs.push(jobId);
+        await user.save();
+      }
+    }
+
+    res.status(201).json({
+      message: "Successfully applied to the job",
+      application,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error applying for the job",
+      error: error.message,
+    });
+  }
+};
+
+const checkProfileCompletionStatus = (jobSeeker) => {
+  const essentialFields = [
+    "resume", 
+    "photo", 
+    "skills", 
+    "years_of_experience", 
+    "job_type"
+  ];
+  
+  const enhancementFields = [
+    "location", 
+    "preferred_locations", 
+    "expected_salary", 
+    "availability_status",
+    "work_experience",
+    "education",
+    "certifications",
+    "languages",
+    "gender",
+    "dob"
+  ];
+  
+  const completedEssentialFields = essentialFields.filter(field => {
+    if (field === "skills") {
+      return jobSeeker[field] && jobSeeker[field].length > 0;
+    }
+    return jobSeeker[field] !== undefined && jobSeeker[field] !== null && jobSeeker[field] !== "";
+  });
+  
+  const completedEnhancementFields = enhancementFields.filter(field => {
+    if (field === "preferred_locations" || field === "work_experience" || field === "education" || 
+        field === "certifications" || field === "languages") {
+      return jobSeeker[field] && jobSeeker[field].length > 0;
+    } else if (field === "location") {
+      return jobSeeker[field] && (
+        jobSeeker[field].city !== "Not specified" || 
+        jobSeeker[field].state !== "Not specified" || 
+        jobSeeker[field].country !== "Not specified"
+      );
+    } else if (field === "expected_salary") {
+      return jobSeeker[field] && (
+        jobSeeker[field].min !== undefined || 
+        jobSeeker[field].max !== undefined
+      );
+    }
+    return jobSeeker[field] !== undefined && jobSeeker[field] !== null && jobSeeker[field] !== "";
+  });
+  
+  const missingEssentialFields = essentialFields.filter(field => 
+    !completedEssentialFields.includes(field)
+  );
+  
+  const missingEnhancementFields = enhancementFields.filter(field => 
+    !completedEnhancementFields.includes(field)
+  );
+  
+  const essentialCompletionPercentage = 
+    (completedEssentialFields.length / essentialFields.length) * 100;
+  
+  const overallCompletionPercentage = 
+    ((completedEssentialFields.length + completedEnhancementFields.length) / 
+    (essentialFields.length + enhancementFields.length)) * 100;
+  
+
+  let profileStatus = "Incomplete";
+  if (essentialCompletionPercentage === 100) {
+    profileStatus = enhancementFields.length === completedEnhancementFields.length ? 
+      "Complete" : "Essential Complete";
+  } else if (essentialCompletionPercentage >= 60) {
+    profileStatus = "Mostly Complete";
+  } else if (essentialCompletionPercentage >= 20) {
+    profileStatus = "Partially Complete";
+  }
+  
+  const recommendations = [];
+  
+  if (missingEssentialFields.length > 0) {
+    recommendations.push(`Complete these essential fields to improve your profile: ${missingEssentialFields.join(', ')}`);
+  }
+  
+  if (missingEssentialFields.length === 0 && missingEnhancementFields.length > 0) {
+    recommendations.push(`Enhance your profile by adding: ${missingEnhancementFields.join(', ')}`);
+  }
+  
+  return {
+    completedEssentialFields,
+    completedEnhancementFields,
+    missingEssentialFields,
+    missingEnhancementFields,
+    essentialCompletionPercentage,
+    overallCompletionPercentage,
+    profileStatus,
+    recommendations,
+    isProfileComplete: missingEssentialFields.length === 0
+  };
 };
