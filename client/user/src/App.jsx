@@ -10,7 +10,7 @@ import JobBoard from "./pages/Joblisting";
 import JobFilters from "./pages/JobFilters";
 import About from "./components/About";
 import JobDetails from "./pages/JobDetails";
-
+import Profile from "./pages/Profile";
 const Layout = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,6 +37,7 @@ function App() {
         <Route path="/jobs" element={<JobBoard />} />
         <Route path="/job-filters" element={<JobFilters />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/jobDetails/:id" element={<JobDetails />} />
         {/* Catch-all route for 404 pages */}
         <Route path="*" element={
