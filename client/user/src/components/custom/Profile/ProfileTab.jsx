@@ -179,7 +179,7 @@ const ProfileTab = ({ profile, onEdit }) => {
             >
               <Phone className="h-5 w-5 text-sky-600" />
             </motion.div>
-            <p className="font-medium text-gray-800">{profile.phone || "No phone number"}</p>
+            <p className="font-medium text-gray-800">{profile.user_id?.phonenumber || "No phone number"}</p>
           </motion.div>
           
           <motion.div 
@@ -198,7 +198,7 @@ const ProfileTab = ({ profile, onEdit }) => {
             >
               <Mail className="h-5 w-5 text-sky-600" />
             </motion.div>
-            <p className="font-medium text-gray-800">{profile.email || "No email address"}</p>
+            <p className="font-medium text-gray-800">{profile.user_id?.email || "No email address"}</p>
           </motion.div>
           
           <motion.div 
