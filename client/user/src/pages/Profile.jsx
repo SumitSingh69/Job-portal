@@ -1,25 +1,8 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import {
-  Phone,
-  Mail,
-  Pencil,
-  Plus,
-  Calendar,
-  MapPin,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Code,
-  Heart,
-  FileText,
-  DollarSign,
-  Clock,
-  Upload,
-} from "lucide-react";
+import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
-import CircularProgress from "../components/CircularProgress";
 import ResumeUpload from "@/components/custom/Profile/Resume";
 import ProfileTab from "@/components/custom/Profile/ProfileTab";
 import ExperienceTab from "@/components/custom/Profile/ExperienceTab";
@@ -28,157 +11,105 @@ import SkillsTab from "@/components/custom/Profile/SkillTab";
 import PreferencesTab from "@/components/custom/Profile/PreferencesTab";
 import EditModal from "@/components/custom/Profile/EditModel";
 import LeftSidebar from "@/components/custom/Profile/LeftSidebar";
+import useAxios from "@/hooks/useAxios";
 
 // Animation variants
 const pageVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1, transition: { duration: 0.5 } },
-  exit: { opacity: 0, transition: { duration: 0.3 } }
+  exit: { opacity: 0, transition: { duration: 0.3 } },
 };
 
 const tabContentVariants = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
 };
 
 const cardVariants = {
   initial: { opacity: 0, scale: 0.95 },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     scale: 1,
-    transition: { 
+    transition: {
       duration: 0.4,
-      staggerChildren: 0.1
-    } 
+      staggerChildren: 0.1,
+    },
   },
-  hover: { 
+  hover: {
     scale: 1.02,
-    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    transition: { duration: 0.2 }
-  }
+    boxShadow:
+      "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    transition: { duration: 0.2 },
+  },
 };
 
 const itemVariants = {
   initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
 const buttonVariants = {
   initial: { scale: 1 },
   hover: { scale: 1.05, transition: { duration: 0.2 } },
-  tap: { scale: 0.95, transition: { duration: 0.1 } }
+  tap: { scale: 0.95, transition: { duration: 0.1 } },
 };
 
 const floatingButtonVariants = {
   initial: { scale: 0, rotate: -180 },
-  animate: { scale: 1, rotate: 0, transition: { delay: 0.5, type: "spring", stiffness: 260, damping: 20 } },
-  hover: { scale: 1.1, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" },
-  tap: { scale: 0.9 }
+  animate: {
+    scale: 1,
+    rotate: 0,
+    transition: { delay: 0.5, type: "spring", stiffness: 260, damping: 20 },
+  },
+  hover: {
+    scale: 1.1,
+    boxShadow:
+      "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+  },
+  tap: { scale: 0.9 },
 };
 
 const modalVariants = {
   initial: { opacity: 0, scale: 0.8, y: 50 },
-  animate: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 400, damping: 30 } },
-  exit: { opacity: 0, scale: 0.8, y: 50, transition: { duration: 0.2 } }
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 400, damping: 30 },
+  },
+  exit: { opacity: 0, scale: 0.8, y: 50, transition: { duration: 0.2 } },
 };
 
 const JobSeekerProfile = () => {
-  
-  const [profile, setProfile] = useState({
-    user_id: "60d0fe4f5311236168a109ca",
-    name: "Sumit ki bandi",
-    photo:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    role: "Devops Engineer",
-    company: "Apple",
-    years_of_experience: 1.5,
-    salary: "INR 1.5Cr",
-    notice_period: "LWD 30 jul",
-    phone: "2305972120",
-    email: "sumitsinghbora.dev@gmail.com",
-    gender: "female",
-    dob: "1995-05-15",
-    languages: ["English", "Hindi", "Spanish"],
-    location: {
-      city: "California",
-      state: "CA",
-      country: "USA",
-    },
-    expected_salary: {
-      min: 120000,
-      max: 150000,
-      currency: "USD",
-    },
-    availability_status: "within_a_month",
-    job_type: "full_time",
-    preferred_locations: [
-      {
-        city: "Bangalore",
-        state: "Karnataka",
-        country: "India",
-      },
-      {
-        city: "San Francisco",
-        state: "CA",
-        country: "USA",
-      },
-    ],
-    work_experience: [
-      {
-        type: "full-time",
-        level: "experienced",
-        company: "Apple",
-        role: "Devops Engineer",
-        start_date: "2024-03-01",
-        end_date: null,
-        current: true,
-        description: "Working on cloud infrastructure and CI/CD pipelines.",
-      },
-      {
-        type: "internship",
-        level: "fresher",
-        company: "Microsoft",
-        role: "Software Engineer Intern",
-        start_date: "2023-05-01",
-        end_date: "2023-08-01",
-        current: false,
-        description: "Worked on backend services using Node.js and MongoDB.",
-      },
-    ],
-    education: [
-      {
-        level: "bachelor",
-        institution: "MIT",
-        field_of_study: "Computer Science",
-        start_date: "2019-09-01",
-        end_date: "2023-05-01",
-        current: false,
-        grade: "3.8 GPA",
-      },
-    ],
-    certifications: [
-      {
-        name: "AWS Certified DevOps Engineer",
-        issuing_organization: "Amazon Web Services",
-        issue_date: "2023-10-01",
-        expiry_date: "2026-10-01",
-        credential_id: "AWS-DOE-12345",
-        credential_url: "https://aws.amazon.com/certification/verify",
-      },
-    ],
-    skills: [
-      "Docker",
-      "Kubernetes",
-      "AWS",
-      "CI/CD",
-      "Python",
-      "Jenkins",
-      "Terraform",
-      "Linux",
-      "Git",
-    ],
-  });
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const axios = useAxios();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`/job-seeker/me`);
+        console.log(response)
+
+        if (response) {
+          setProfile(response.data.jobSeeker);
+        } else {
+          setError("Unable to fetch profile data");
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError(err.response?.data?.message || "Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [axios]);
 
   const [activeTab, setActiveTab] = useState("profile");
   const [editModal, setEditModal] = useState({
@@ -211,6 +142,83 @@ const JobSeekerProfile = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-sky-50">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <div className="w-16 h-16 border-t-4 border-sky-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your profile...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-sky-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-6 rounded-lg shadow-md max-w-md text-center"
+        >
+          <div className="text-red-500 text-5xl mb-4">😕</div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            Oops! Something went wrong
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600"
+          >
+            Try Again
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-sky-50">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-8 rounded-lg shadow-md max-w-md text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <Plus className="h-10 w-10 text-sky-500" />
+          </motion.div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+            Create Your Profile
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Your profile helps employers discover you. Complete your details to
+            stand out in the job market.
+          </p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleEdit("profile")}
+            className="px-5 py-3 bg-sky-500 text-white rounded-md hover:bg-sky-600 shadow-sm"
+          >
+            Get Started
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
+
   const renderModalContent = () => {
     const { type, index } = editModal;
 
@@ -221,7 +229,7 @@ const JobSeekerProfile = () => {
         return <h4>Edit Contact Information Form</h4>;
       case "resume":
         return (
-          <motion.div 
+          <motion.div
             className="space-y-4"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -358,15 +366,15 @@ const JobSeekerProfile = () => {
     experience: { x: 100 },
     education: { x: 200 },
     skills: { x: 300 },
-    preferences: { x: 400 }
+    preferences: { x: 400 },
   };
 
   return (
-    <motion.div 
-      className="flex min-h-screen bg-sky-50" 
-      variants={pageVariants} 
-      initial="initial" 
-      animate="animate" 
+    <motion.div
+      className="flex min-h-screen bg-sky-50"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
       exit="exit"
     >
       {/* Left Sidebar */}
@@ -380,14 +388,14 @@ const JobSeekerProfile = () => {
       </motion.div>
 
       {/* Right Side (Tabs and Content) */}
-      <motion.div 
+      <motion.div
         className="w-3/4 p-5 overflow-y-auto h-screen"
         initial={{ x: 50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         {/* Tabs navigation */}
-        <motion.div 
+        <motion.div
           className="bg-white rounded-md shadow-sm mb-5 border border-gray-200"
           variants={cardVariants}
           initial="initial"
@@ -455,9 +463,9 @@ const JobSeekerProfile = () => {
             >
               Preferences
             </motion.button>
-            
+
             {/* Animated underline indicator */}
-            <motion.div 
+            <motion.div
               className="absolute bottom-0 h-0.5 w-16 bg-sky-500"
               animate={activeTab}
               variants={tabUnderlineVariants}
@@ -468,7 +476,7 @@ const JobSeekerProfile = () => {
 
         {/* Tab content with animation */}
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={activeTab}
             variants={tabContentVariants}
             initial="initial"
@@ -501,7 +509,7 @@ const JobSeekerProfile = () => {
                 variants: modalVariants,
                 initial: "initial",
                 animate: "animate",
-                exit: "exit"
+                exit: "exit",
               }}
             >
               {renderModalContent()}
@@ -511,7 +519,7 @@ const JobSeekerProfile = () => {
       </motion.div>
 
       {/* Floating action button with animations */}
-      <motion.div 
+      <motion.div
         className="fixed bottom-6 right-6"
         variants={floatingButtonVariants}
         initial="initial"
@@ -525,11 +533,11 @@ const JobSeekerProfile = () => {
         >
           <motion.div
             animate={{ rotate: [0, 10, -10, 10, 0] }}
-            transition={{ 
-              duration: 1, 
-              repeat: Infinity, 
-              repeatType: "reverse", 
-              repeatDelay: 1
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              repeatType: "reverse",
+              repeatDelay: 1,
             }}
           >
             <Heart className="h-6 w-6" />

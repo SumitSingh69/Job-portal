@@ -249,26 +249,19 @@ export const getJobSeekerById = async (req, res) => {
   }
 };
 
-// Get job-seeker by user ID
 export const getJobSeekerByUserId = async (req, res) => {
   try {
-    // const { userId } = req.params;
-    const {_id} = req.user;
-    
-    // Validate userId format
-   if(!_id){
-    return res.status(HTTPSTATUS.NOT_FOUND).json({ message: "User not found" });
-   }
-    
-    const jobSeeker = await JobSeeker.findOne({ user_id: _id });
-    
+
+    const { _id } = req.user;
+
+    const jobSeeker = await JobSeeker.findOne({ user_id: _id }).populate("user_id", "firstName lastName email photo phonenumber");
+
     if (!jobSeeker) {
       return res.status(404).json({ message: "Job-seeker not found" });
     }
-    
-    // Include profile completion status
+
     const profileStatus = checkProfileCompletionStatus(jobSeeker);
-    
+
     res.status(200).json({ 
       jobSeeker,
       profileStatus

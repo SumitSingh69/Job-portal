@@ -6,7 +6,6 @@ import { isJobseeker } from "../middleware/role.middleware.js";
 const router = Router();    
 
 router.post('/job-seeker/create' , verifyAccessToken , isJobseeker , createJobSeeker);
-router.get('/job-seeker/:id' , verifyAccessToken , isJobseeker , getJobSeekerById);
-router.get('/job-seeker/user/:id' , verifyAccessToken , isJobseeker , getJobSeekerByUserId);
+router.get('/job-seeker/me' , verifyAccessToken , isJobseeker , getJobSeekerByUserId);
 
 export default router;
