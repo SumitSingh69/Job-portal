@@ -30,6 +30,7 @@ import { motion } from "framer-motion";
 import { AuthContext } from "@/context/AuthContext";
 import { useContext } from "react";
 import toast from "@/components/custom/toast";
+import JobPortalHero from "@/components/custom/Homepage/Hero";
 
 const JobCategoriesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("IT Jobs");
@@ -46,7 +47,7 @@ const JobCategoriesSection = () => {
     }
   }, [user]);
 
-  console.log(user);
+  // console.log(user);
 
   const categories = {
     "IT Jobs": {
@@ -246,124 +247,7 @@ const Homepage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="relative min-h-[600px] bg-[url('/src/assets/hero.jpg')] bg-cover bg-center rounded-xl overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-black to-white/20" />
-
-          <div
-            className="absolute inset-0 bg-black/20"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)",
-              backgroundSize: "40px 40px",
-            }}
-          />
-
-          <motion.div
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-400 rounded-full opacity-10 blur-3xl"
-          />
-          <motion.div
-            animate={{
-              y: [0, 20, 0],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-purple-400 rounded-full opacity-10 blur-3xl"
-          />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <div className="inline-flex items-center bg-blue-800/40 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-white/10">
-              <Sparkles className="text-yellow-400 mr-2" size={16} />
-              <span className="text-blue-100">Over 50,000 jobs available</span>
-            </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
-              Find Your{" "}
-              <motion.span
-                initial={{ backgroundPosition: "0 0" }}
-                animate={{ backgroundPosition: "200% 0" }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 bg-[length:200%_100%]"
-              >
-                Dream Job
-              </motion.span>{" "}
-              Today
-            </h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Connect with top employers and take the next step in your career
-              journey
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-white/20">
-              <div className="flex flex-col md:flex-row gap-4 mb-4">
-                <div className="flex-1 relative">
-                  <Search
-                    className="absolute left-3 top-3.5 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Job title, skills, or company"
-                    className="w-full pl-10 p-3 bg-white/80 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex-1 relative">
-                  <MapPin
-                    className="absolute left-3 top-3.5 text-gray-400"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Location"
-                    className="w-full pl-10 p-3 bg-white/80 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="md:w-auto w-full px-4 py-3 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-colors"
-                >
-                  <Filter size={20} className="text-gray-600" />
-                  <span className="text-gray-600">Filters</span>
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-colors flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <Search size={20} />
-                  <span>Search Jobs</span>
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <JobPortalHero/>
 
       <JobCategoriesSection />
 
