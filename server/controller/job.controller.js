@@ -303,15 +303,15 @@ export const applyJob = async (req, res, next) => {
     }
     
     // Find job seeker profile
-    const jobSeeker = await JobSeeker.findOne({ user_id: userId });
+    // const jobSeeker = await JobSeeker.findOne({ user_id: userId });
     
-    if (!jobSeeker) {
-      return res.status(HTTPSTATUS.NOT_FOUND).json({
-        success: false,
-        status: HTTPSTATUS.NOT_FOUND,
-        message: "JobSeeker profile not found. Please complete your profile before applying.",
-      });
-    }
+    // if (!jobSeeker) {
+    //   return res.status(HTTPSTATUS.NOT_FOUND).json({
+    //     success: false,
+    //     status: HTTPSTATUS.NOT_FOUND,
+    //     message: "JobSeeker profile not found. Please complete your profile before applying.",
+    //   });
+    // }
     
     // Start a session for transaction
     const session = await mongoose.startSession();
