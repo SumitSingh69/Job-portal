@@ -27,10 +27,10 @@ import {
 } from "recharts";
 
 import { motion } from "framer-motion";
-import { AuthContext } from "@/context/AuthContext";
 import { useContext } from "react";
 import toast from "@/components/custom/toast";
 import JobPortalHero from "@/components/custom/Homepage/Hero";
+import { AuthContext } from "../context/authContext";
 
 const JobCategoriesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("IT Jobs");
