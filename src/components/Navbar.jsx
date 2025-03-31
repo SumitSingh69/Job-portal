@@ -13,9 +13,10 @@ import {
   Bell,
   ChevronRight,
 } from "lucide-react";
-import { AuthContext } from "@/context/authContext";
+
 import useAxios from "@/hooks/useAxios";
 import toast from "@/components/custom/toast";
+import { AuthContext } from "@/context/authContext";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);

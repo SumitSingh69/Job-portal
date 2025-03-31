@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { AuthContext } from "@/context/authContext";
 
+
 const Signup = () => {
   const [showPassword1, setShowPassword1] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);

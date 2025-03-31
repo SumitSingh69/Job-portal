@@ -1,5 +1,4 @@
 import { useState, useContext } from "react";
-import { AuthContext } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Github } from "lucide-react";
 import toast from "@/components/custom/toast";
+import { AuthContext } from "@/context/authContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
