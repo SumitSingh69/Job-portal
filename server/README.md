@@ -275,6 +275,54 @@ UPLOAD_DIR=uploads
 MAX_FILE_SIZE=5000000  # 5MB
 ```
 
+## Data Flow Diagram (DFD)
+
+Below is the Level 1 Data Flow Diagram (DFD) for the JobConnect platform:
+
+![Data Flow Diagram](https://via.placeholder.com/800x600?text=Data+Flow+Diagram)
+
+### Description:
+1. **User**: Interacts with the system via the frontend or API to perform actions like job search, application, or profile updates.
+2. **Authentication System**: Handles user login, registration, and token management.
+3. **Job Management**: Manages job postings, updates, and deletions by recruiters.
+4. **Application Management**: Tracks job applications submitted by job seekers.
+5. **Database**: Stores all data related to users, jobs, companies, and applications.
+
+---
+
+## Entity-Relationship (ER) Diagram
+
+Below is the ER Diagram representing the relationships between entities in the JobConnect platform:
+
+![Entity-Relationship Diagram](https://via.placeholder.com/800x600?text=Entity+Relationship+Diagram)
+
+### Key Entities:
+1. **User**:
+   - Attributes: `id`, `name`, `email`, `password`, `role`, `avatar`, `resume`, `skills`, `applications`, `savedJobs`, `company`
+   - Relationships:
+     - Can apply to multiple **Jobs**.
+     - Can belong to one **Company** (if recruiter).
+
+2. **Company**:
+   - Attributes: `id`, `name`, `description`, `logo`, `website`, `industry`, `location`, `employees`
+   - Relationships:
+     - Can post multiple **Jobs**.
+     - Can have multiple **Users** as employees.
+
+3. **Job**:
+   - Attributes: `id`, `title`, `description`, `requirements`, `company`, `location`, `type`, `experience`, `salary`, `skills`, `applications`, `postedBy`, `isActive`
+   - Relationships:
+     - Belongs to one **Company**.
+     - Can have multiple **Applications**.
+
+4. **Application**:
+   - Attributes: `id`, `job`, `applicant`, `resume`, `coverLetter`, `status`, `appliedAt`
+   - Relationships:
+     - Belongs to one **Job**.
+     - Belongs to one **User** (applicant).
+
+---
+
 ## Database Relationships
 
 ![Database Relationship Diagram](https://via.placeholder.com/800x600?text=Database+Relationships)
