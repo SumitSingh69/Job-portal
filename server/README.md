@@ -279,7 +279,30 @@ MAX_FILE_SIZE=5000000  # 5MB
 
 Below is the Level 1 Data Flow Diagram (DFD) for the JobConnect platform:
 
-![Data Flow Diagram](https://via.placeholder.com/800x600?text=Data+Flow+Diagram)
+[![](https://mermaid.ink/img/pako:eNqFVE1vozAQ_SuWT42UVuSLpWi1UhtOq-1l0-5hQw9OcAlqsJEx6naj_PcdM8YxSdD6YMbz3rPHw4MD3cqM05i-7eXHdseUJs9JKgiMl5qrm7WZX0eYwbluNrli1Y48NHq3-qw1L9cpNQsudLFlupCCYD6lr6gx44fMCwHM9tlDfvK8ALoCEEPVbtLjPMt3Lp7yUgOpjckTEyznJRzqiFxkVyv9LjdWCtE1oRlLxZnmQAAaxkbXo7xUmaNgfEFJ-J53FIx7lKEKH6rKVgjRvuviQKWrZlMWGohAx5h4qh71V8E_kGiiQRpeZqWZburT3fxSEPvvPZJHc2-m2YbVvH8EGKle37SPkZeH7kDazH52KcuKiYID5EIf90oDir8aXa_QnEu-3t5-82x7jlibXAjw3fi7nfZASvKIebtDP2n1_STO7beAgDM4It03QQzWNs3XOa8SW7dFnUHP8s6VZ3mcnZ-Iva5rJuLWRAOo750Bii26e5Gu2_Wp1bXr9ZnW0C4xOqa5KjIaa9XwMS25KplZ0oNRpRR-RiX4L4YwY-o9pak4ggbO_y1l2cmUbPIdjd_YvoZV014kKRhY-UQBH3G1lI3QNJ5O2i1ofKB_aDwLJnfzxXxxPw2jcD6ZTcf0E7LhXfRlfh9NgmAWRkEULo5j-rc9NABkcfwHNyyvqA?type=png)](https://mermaid.live/edit#pako:eNqFVE1vozAQ_SuWT42UVuSLpWi1UhtOq-1l0-5hQw9OcAlqsJEx6naj_PcdM8YxSdD6YMbz3rPHw4MD3cqM05i-7eXHdseUJs9JKgiMl5qrm7WZX0eYwbluNrli1Y48NHq3-qw1L9cpNQsudLFlupCCYD6lr6gx44fMCwHM9tlDfvK8ALoCEEPVbtLjPMt3Lp7yUgOpjckTEyznJRzqiFxkVyv9LjdWCtE1oRlLxZnmQAAaxkbXo7xUmaNgfEFJ-J53FIx7lKEKH6rKVgjRvuviQKWrZlMWGohAx5h4qh71V8E_kGiiQRpeZqWZburT3fxSEPvvPZJHc2-m2YbVvH8EGKle37SPkZeH7kDazH52KcuKiYID5EIf90oDir8aXa_QnEu-3t5-82x7jlibXAjw3fi7nfZASvKIebtDP2n1_STO7beAgDM4It03QQzWNs3XOa8SW7dFnUHP8s6VZ3mcnZ-Iva5rJuLWRAOo750Bii26e5Gu2_Wp1bXr9ZnW0C4xOqa5KjIaa9XwMS25KplZ0oNRpRR-RiX4L4YwY-o9pak4ggbO_y1l2cmUbPIdjd_YvoZV014kKRhY-UQBH3G1lI3QNJ5O2i1ofKB_aDwLJnfzxXxxPw2jcD6ZTcf0E7LhXfRlfh9NgmAWRkEULo5j-rc9NABkcfwHNyyvqA)
+
+Below is a textual representation of the Level 1 Data Flow Diagram (DFD) for the JobConnect platform:
+
+```
+User
+├── Authentication System
+│   ├── Login
+│   ├── Registration
+│   └── Token Management
+├── Job Management
+│   ├── Create Job
+│   ├── Update Job
+│   └── Delete Job
+├── Application Management
+│   ├── Submit Application
+│   ├── View Application
+│   └── Update Application Status
+└── Database
+    ├── Users
+    ├── Jobs
+    ├── Companies
+    └── Applications
+```
 
 ### Description:
 1. **User**: Interacts with the system via the frontend or API to perform actions like job search, application, or profile updates.
@@ -294,7 +317,35 @@ Below is the Level 1 Data Flow Diagram (DFD) for the JobConnect platform:
 
 Below is the ER Diagram representing the relationships between entities in the JobConnect platform:
 
-![Entity-Relationship Diagram](https://via.placeholder.com/800x600?text=Entity+Relationship+Diagram)
+[![](https://mermaid.ink/img/pako:eNqdVE1z2yAQ_SsMp2bGycjxRxTd3PTU6bWXji9IrBUSxKoLcqLa_u8FyXZU47ppOMHu2327j4UNL1ACzzjQFyVKEtXSML--WyC23V5f44Yt6lqrQjiFhmVsyW2TV8rZJR9Adx663bIHrGph2g6Wg0ZTWuaQfVIrRlBQoxzQ1SHwAN7TfMW8i6vRviU_wXRcAQRVrbE9wkLsX6r1vKDWcIQOit70-7CsI2VKpmRkMqKCyAiVUDqy1sLaF6Q4B6GOc4i1cIJiLNhmyCiIRMvss9LanlrFW6-Rz4o1SK_LwEGwYkUvaG_cDSU5SP1xVSTYglQdyol8GkuMjC-QWz8SMaGRjd-2Z7L03Z42248DgD3TV5iNd_XklNPvbKpnJfjZKIIKjLuk8sX6D9xtfWbKXmsgBaYYuDB_gsL529ViqM__T0koMzw1kJ8HeXL0oyoMU3ZROP9szug5fGCXdQ0UT5j_adhXY9w_J39vLnAN9A2c_zoin3XCNYOmpHDQM4Bc7Bl2fMRLUpJnjhoY8QrIv15_5F31S-4e_RUuefgspKDn8FGEGH-BPxCrQxhhUz7ybCW09aemDlT7L_MIASOBHrAxjmfjuy4Fzzb8lWeTZHwznU1n97fzdD4dT25HvPXW-U16N71Px0kymadJOp_tRvxXR5p4z2z3G_N9uKg?type=png)](https://mermaid.live/edit#pako:eNqdVE1z2yAQ_SsMp2bGycjxRxTd3PTU6bWXji9IrBUSxKoLcqLa_u8FyXZU47ppOMHu2327j4UNL1ACzzjQFyVKEtXSML--WyC23V5f44Yt6lqrQjiFhmVsyW2TV8rZJR9Adx663bIHrGph2g6Wg0ZTWuaQfVIrRlBQoxzQ1SHwAN7TfMW8i6vRviU_wXRcAQRVrbE9wkLsX6r1vKDWcIQOit70-7CsI2VKpmRkMqKCyAiVUDqy1sLaF6Q4B6GOc4i1cIJiLNhmyCiIRMvss9LanlrFW6-Rz4o1SK_LwEGwYkUvaG_cDSU5SP1xVSTYglQdyol8GkuMjC-QWz8SMaGRjd-2Z7L03Z42248DgD3TV5iNd_XklNPvbKpnJfjZKIIKjLuk8sX6D9xtfWbKXmsgBaYYuDB_gsL529ViqM__T0koMzw1kJ8HeXL0oyoMU3ZROP9szug5fGCXdQ0UT5j_adhXY9w_J39vLnAN9A2c_zoin3XCNYOmpHDQM4Bc7Bl2fMRLUpJnjhoY8QrIv15_5F31S-4e_RUuefgspKDn8FGEGH-BPxCrQxhhUz7ybCW09aemDlT7L_MIASOBHrAxjmfjuy4Fzzb8lWeTZHwznU1n97fzdD4dT25HvPXW-U16N71Px0kymadJOp_tRvxXR5p4z2z3G_N9uKg)
+
+Below is a textual representation of the ER Diagram for the JobConnect platform:
+
+```
+User
+├── Attributes: id, name, email, password, role, avatar, resume, skills, applications, savedJobs, company
+├── Relationships:
+│   ├── Applies to → Job (many-to-many)
+│   └── Belongs to → Company (one-to-one, if recruiter)
+
+Company
+├── Attributes: id, name, description, logo, website, industry, location, employees
+├── Relationships:
+│   ├── Posts → Job (one-to-many)
+│   └── Employs → User (one-to-many)
+
+Job
+├── Attributes: id, title, description, requirements, company, location, type, experience, salary, skills, applications, postedBy, isActive
+├── Relationships:
+│   ├── Belongs to → Company (one-to-one)
+│   └── Receives → Application (one-to-many)
+
+Application
+├── Attributes: id, job, applicant, resume, coverLetter, status, appliedAt
+├── Relationships:
+│   ├── Belongs to → Job (one-to-one)
+│   └── Belongs to → User (one-to-one)
+```
 
 ### Key Entities:
 1. **User**:
@@ -324,8 +375,6 @@ Below is the ER Diagram representing the relationships between entities in the J
 ---
 
 ## Database Relationships
-
-![Database Relationship Diagram](https://via.placeholder.com/800x600?text=Database+Relationships)
 
 - A **Recruiter** belongs to one **Company**.
 - A **Company** can have many **Jobs**.
