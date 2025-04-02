@@ -12,7 +12,7 @@ const useAxios = () => {
   // Create memoized axios instance that persists between renders
   const axiosInstance = useMemo(() => {
     const instance = axios.create({
-      baseURL: "https://job-portal-backend-kappa-pink.vercel.app/api", // Your API base URL
+      baseURL: "https://job-portal-backend-olive.vercel.app/api",
       timeout: 10000,
       headers: {
         "Content-Type": "application/json",
