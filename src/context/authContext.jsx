@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
     
-    const API_BASE_URL = "https://job-portal-backend-ashy.vercel.app/api";
+    const API_BASE_URL = "https://job-portal-backend-kappa-pink.vercel.app//api";
     
     useEffect(() => {
         const init = async () => {
