@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const API_BASE_URL = import.meta.env.VITE_BASE_URL + "/api";
-
+    console.log(API_BASE_URL);
   useEffect(() => {
     const init = async () => {
       try {
