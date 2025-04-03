@@ -163,6 +163,8 @@ const LeftSidebar = ({ profile }) => {
                 whileHover="hover"
                 whileTap="tap"
               >
+
+
                 <Pencil className="w-6 h-6 text-white" />
               </motion.div>
             </motion.div>
@@ -170,14 +172,7 @@ const LeftSidebar = ({ profile }) => {
           <motion.div className="text-center mb-4" variants={textFadeVariants}>
             <div className="flex items-center justify-center">
               <h2 className="font-bold text-xl">{profile.user_id?.firstName || "User"}</h2>
-              <motion.button
-                className="ml-2 p-1 hover:bg-sky-50 rounded-full"
-                variants={iconButtonVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <Pencil className="w-3 h-3" />
-              </motion.button>
+              
             </div>
             <motion.h5
               className="text-gray-700"
@@ -279,13 +274,6 @@ const LeftSidebar = ({ profile }) => {
             </motion.div>
             <p>{profile.user_id?.phonenumber || "Phone not added"}</p>
           </div>
-          <motion.div
-            variants={iconButtonVariants}
-            whileHover="hover"
-            whileTap="tap"
-          >
-            <Pencil className="h-3 w-3" />
-          </motion.div>
         </motion.div>
         <motion.div
           className="flex items-center gap-2 p-2"
