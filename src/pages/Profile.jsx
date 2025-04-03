@@ -12,6 +12,17 @@ import PreferencesTab from "@/components/custom/Profile/PreferencesTab";
 import EditModal from "@/components/custom/Profile/EditModel";
 import LeftSidebar from "@/components/custom/Profile/LeftSidebar";
 import useAxios from "@/hooks/useAxios";
+import PersonalInfoForm from "@/components/custom/Profile/forms/PersonalInfoForm";
+import ContactInfoForm from "@/components/custom/Profile/forms/ContactInfoForm";
+import PhotoUploadForm from "@/components/custom/Profile/forms/PhotoUploadForm";
+import SkillsForm from "@/components/custom/Profile/forms/SkillsForm";
+import PreferencesForm from "@/components/custom/Profile/forms/PreferencesForm";
+import ExperienceForm from "@/components/custom/Profile/forms/ExperienceForm";
+import EducationForm from "@/components/custom/Profile/forms/EducationForm";
+import CertificationForm from "@/components/custom/Profile/forms/CertificationForm";
+import JobTypeForm from "@/components/custom/Profile/forms/JobTypeForm";
+import SalaryForm from "@/components/custom/Profile/forms/SalaryForm";
+import LocationsForm from "@/components/custom/Profile/forms/LocationsForm";
 
 // Animation variants
 const pageVariants = {
@@ -93,7 +104,7 @@ const JobSeekerProfile = () => {
       try {
         setLoading(true);
         const response = await axios.get(`/job-seeker/me`);
-        console.log(response)
+        console.log(response);
 
         if (response) {
           setProfile(response.data.jobSeeker);
@@ -140,6 +151,406 @@ const JobSeekerProfile = () => {
       type: null,
       index: null,
     });
+  };
+
+  const getModalTitle = (type, index = null) => {
+    switch (type) {
+      case "profile":
+        return "Edit Profile";
+      case "contact":
+        return "Edit Contact Information";
+      case "photo":
+        return "Upload Photo";
+      case "skills":
+        return "Edit Skills";
+      case "preferences":
+        return "Edit Preferences";
+      case "experience":
+        const company = profile?.work_experience?.[index]?.company;
+        return `Edit Experience at ${company || "Company"}`;
+      case "add_experience":
+        return "Add New Experience";
+      case "education":
+        const institution = profile?.education?.[index]?.institution;
+        return `Edit Education at ${institution || "Institution"}`;
+      case "add_education":
+        return "Add New Education";
+      case "certification":
+        const certName = profile?.certifications?.[index]?.name;
+        return `Edit Certification: ${certName || "Certificate"}`;
+      case "add_certification":
+        return "Add New Certification";
+      case "jobType":
+        return "Edit Job Type & Availability";
+      case "salary":
+        return "Edit Salary Expectations";
+      case "locations":
+        return "Edit Preferred Locations";
+      default:
+        return "Edit Form";
+    }
+  };
+
+  const renderModalContent = () => {
+    const { type, index } = editModal;
+
+    switch (type) {
+      case "profile":
+        return (
+          <PersonalInfoForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+          />
+        );
+      case "contact":
+        return (
+          <ContactInfoForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+          />
+        );
+      case "photo":
+        return (
+          <PhotoUploadForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+          />
+        );
+      case "skills":
+        return (
+          <SkillsForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+          />
+        );
+      case "preferences":
+        return (
+          <PreferencesForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+          />
+        );
+      case "resume":
+        return (
+          <motion.div
+            className="space-y-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <p className="text-gray-600">
+              Upload your resume to showcase your skills and experience to
+              potential employers.
+            </p>
+
+            <ResumeUpload
+              initialResume={
+                profile.resume
+                  ? {
+                      name: "resume.pdf",
+                      size: 500000,
+                      type: "application/pdf",
+                      url: profile.resume,
+                    }
+                  : null
+              }
+              onUploadSuccess={(resumeData) => {
+                setProfile((prev) => ({
+                  ...prev,
+                  resume: resumeData ? resumeData.url : null,
+                }));
+
+                setTimeout(() => {
+                  closeModal();
+                }, 1000);
+              }}
+            />
+
+            <div className="flex justify-end mt-4">
+              <motion.button
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                onClick={closeModal}
+                className="px-4 py-2 border border-gray-300 rounded-md mr-2 hover:bg-gray-50"
+              >
+                Cancel
+              </motion.button>
+              <motion.button
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                onClick={closeModal}
+                className="px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600"
+              >
+                Done
+              </motion.button>
+            </div>
+          </motion.div>
+        );
+      case "experience":
+        const experienceData = profile?.work_experience?.[index];
+        return (
+          <ExperienceForm
+            initialData={experienceData}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "add_experience":
+        return (
+          <ExperienceForm
+            initialData={null}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "education":
+        const educationData = profile?.education?.[index];
+        return (
+          <EducationForm
+            initialData={educationData}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "add_education":
+        return (
+          <EducationForm
+            initialData={null}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "certification":
+        const certificationData = profile?.certifications?.[index];
+        return (
+          <CertificationForm
+            initialData={certificationData}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "add_certification":
+        return (
+          <CertificationForm
+            initialData={null}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "jobType":
+        return (
+          <JobTypeForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "salary":
+        return (
+          <SalaryForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      case "locations":
+        return (
+          <LocationsForm
+            initialData={profile}
+            onSubmit={handleFormSubmit}
+            loading={loading}
+            onClose={closeModal}
+            editModal={editModal}
+          />
+        );
+      default:
+        return <h4>Edit Form</h4>;
+    }
+  };
+
+  const handleFormSubmit = async (formData) => {
+    try {
+      setLoading(true);
+      let endpoint = "/job-seeker/update";
+      let requestData = formData;
+
+      // Special handling for different update types
+      if (formData.type === "experience") {
+        endpoint = `/job-seeker/experience/${
+          formData.index || editModal.index
+        }`;
+        requestData = formData.data;
+      } else if (formData.type === "add_experience") {
+        endpoint = "/job-seeker/experience";
+        requestData = formData.data;
+      } else if (formData.type === "education") {
+        endpoint = `/job-seeker/education/${formData.index || editModal.index}`;
+        requestData = formData.data;
+      } else if (formData.type === "add_education") {
+        endpoint = "/job-seeker/education";
+        requestData = formData.data;
+      } else if (formData.type === "certification") {
+        endpoint = `/job-seeker/certification/${
+          formData.index || editModal.index
+        }`;
+        requestData = formData.data;
+      } else if (formData.type === "add_certification") {
+        endpoint = "/job-seeker/certification";
+        requestData = formData.data;
+      } else {
+        endpoint = "/job-seeker/update";
+        requestData = formData;
+      }
+
+      console.log("Submitting to endpoint:", endpoint);
+      console.log("Request data:", requestData);
+
+      const response = await axios.patch(endpoint, requestData);
+
+      if (response.data) {
+        // Update the profile state based on the type of update
+        if (formData.type === "experience") {
+          const updateIndex = formData.index || editModal.index;
+          setProfile((prev) => ({
+            ...prev,
+            work_experience: prev.work_experience.map((exp, idx) =>
+              idx === updateIndex
+                ? response.data.experience || response.data
+                : exp
+            ),
+          }));
+        } else if (formData.type === "add_experience") {
+          setProfile((prev) => ({
+            ...prev,
+            work_experience: [
+              ...(prev.work_experience || []),
+              response.data.experience || response.data,
+            ],
+          }));
+        } else if (formData.type === "education") {
+          const updateIndex = formData.index || editModal.index;
+          setProfile((prev) => ({
+            ...prev,
+            education: prev.education.map((edu, idx) =>
+              idx === updateIndex
+                ? response.data.education || response.data
+                : edu
+            ),
+          }));
+        } else if (formData.type === "add_education") {
+          setProfile((prev) => ({
+            ...prev,
+            education: [
+              ...(prev.education || []),
+              response.data.education || response.data,
+            ],
+          }));
+        } else if (formData.type === "certification") {
+          const updateIndex = formData.index || editModal.index;
+          setProfile((prev) => ({
+            ...prev,
+            certifications: prev.certifications.map((cert, idx) =>
+              idx === updateIndex
+                ? response.data.certification || response.data
+                : cert
+            ),
+          }));
+        } else if (formData.type === "add_certification") {
+          setProfile((prev) => ({
+            ...prev,
+            certifications: [
+              ...(prev.certifications || []),
+              response.data.certification || response.data,
+            ],
+          }));
+        } else {
+          setProfile((prev) => ({
+            ...prev,
+            ...response.data,
+          }));
+        }
+        closeModal();
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Render active tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "profile":
+        return <ProfileTab profile={profile} onEdit={handleEdit} />;
+      case "experience":
+        return (
+          <ExperienceTab
+            experiences={profile.work_experience}
+            onEdit={handleEdit}
+            onAdd={handleAdd}
+          />
+        );
+      case "education":
+        return (
+          <EducationTab
+            education={profile.education}
+            onEdit={handleEdit}
+            onAdd={handleAdd}
+          />
+        );
+      case "skills":
+        return (
+          <SkillsTab
+            skills={profile.skills}
+            certifications={profile.certifications}
+            onEdit={handleEdit}
+            onAdd={handleAdd}
+          />
+        );
+      case "preferences":
+        return <PreferencesTab preferences={profile} onEdit={handleEdit} />;
+      default:
+        return <ProfileTab profile={profile} onEdit={handleEdit} />;
+    }
+  };
+
+  // Animation for tab indicators
+  const tabUnderlineVariants = {
+    profile: { x: 0 },
+    experience: { x: 100 },
+    education: { x: 200 },
+    skills: { x: 300 },
+    preferences: { x: 400 },
   };
 
   if (loading) {
@@ -218,156 +629,6 @@ const JobSeekerProfile = () => {
       </div>
     );
   }
-
-  const renderModalContent = () => {
-    const { type, index } = editModal;
-
-    switch (type) {
-      case "profile":
-        return <h4>Edit Personal Information Form</h4>;
-      case "contact":
-        return <h4>Edit Contact Information Form</h4>;
-      case "resume":
-        return (
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <p className="text-gray-600">
-              Upload your resume to showcase your skills and experience to
-              potential employers.
-            </p>
-
-            <ResumeUpload
-              initialResume={
-                profile.resume
-                  ? {
-                      name: "resume.pdf",
-                      size: 500000,
-                      type: "application/pdf",
-                      url: profile.resume,
-                    }
-                  : null
-              }
-              onUploadSuccess={(resumeData) => {
-                setProfile((prev) => ({
-                  ...prev,
-                  resume: resumeData ? resumeData.url : null,
-                }));
-
-                setTimeout(() => {
-                  closeModal();
-                }, 1000);
-              }}
-            />
-
-            <div className="flex justify-end mt-4">
-              <motion.button
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                onClick={closeModal}
-                className="px-4 py-2 border border-gray-300 rounded-md mr-2 hover:bg-gray-50"
-              >
-                Cancel
-              </motion.button>
-              <motion.button
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                onClick={closeModal}
-                className="px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600"
-              >
-                Done
-              </motion.button>
-            </div>
-          </motion.div>
-        );
-      case "experience":
-        return (
-          <h4>
-            Edit Work Experience Form for{" "}
-            {profile.work_experience[index]?.company}
-          </h4>
-        );
-      case "add_experience":
-        return <h4>Add New Work Experience Form</h4>;
-      case "education":
-        return (
-          <h4>
-            Edit Education Form for {profile.education[index]?.institution}
-          </h4>
-        );
-      case "add_education":
-        return <h4>Add New Education Form</h4>;
-      case "skills":
-        return <h4>Edit Skills Form</h4>;
-      case "certification":
-        return (
-          <h4>
-            Edit Certification Form for {profile.certifications[index]?.name}
-          </h4>
-        );
-      case "add_certification":
-        return <h4>Add New Certification Form</h4>;
-      case "jobType":
-        return <h4>Edit Job Type Preferences Form</h4>;
-      case "salary":
-        return <h4>Edit Salary Expectations Form</h4>;
-      case "locations":
-        return <h4>Edit Preferred Locations Form</h4>;
-      default:
-        return <h4>Edit Form</h4>;
-    }
-  };
-
-  // Render active tab content
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "profile":
-        return <ProfileTab profile={profile} onEdit={handleEdit} />;
-      case "experience":
-        return (
-          <ExperienceTab
-            experiences={profile.work_experience}
-            onEdit={handleEdit}
-            onAdd={handleAdd}
-          />
-        );
-      case "education":
-        return (
-          <EducationTab
-            education={profile.education}
-            onEdit={handleEdit}
-            onAdd={handleAdd}
-          />
-        );
-      case "skills":
-        return (
-          <SkillsTab
-            skills={profile.skills}
-            certifications={profile.certifications}
-            onEdit={handleEdit}
-            onAdd={handleAdd}
-          />
-        );
-      case "preferences":
-        return <PreferencesTab preferences={profile} onEdit={handleEdit} />;
-      default:
-        return <ProfileTab profile={profile} onEdit={handleEdit} />;
-    }
-  };
-
-  // Animation for tab indicators
-  const tabUnderlineVariants = {
-    profile: { x: 0 },
-    experience: { x: 100 },
-    education: { x: 200 },
-    skills: { x: 300 },
-    preferences: { x: 400 },
-  };
 
   return (
     <motion.div
@@ -494,17 +755,83 @@ const JobSeekerProfile = () => {
             <EditModal
               isOpen={editModal.isOpen}
               onClose={closeModal}
-              title={
-                editModal.type === "profile"
-                  ? "Edit Profile"
-                  : editModal.type === "contact"
-                  ? "Edit Contact Information"
-                  : editModal.type === "resume"
-                  ? "Upload Resume"
-                  : editModal.type?.startsWith("add_")
-                  ? `Add ${editModal.type.replace("add_", "")}`
-                  : `Edit ${editModal.type}`
+              title={getModalTitle(editModal.type, editModal.index)}
+              type={editModal.type}
+              data={
+                editModal.type === "experience"
+                  ? {
+                      ...profile?.work_experience?.[editModal.index],
+                      index: editModal.index,
+                    }
+                  : editModal.type === "education"
+                  ? {
+                      ...profile?.education?.[editModal.index],
+                      index: editModal.index,
+                    }
+                  : editModal.type === "certification"
+                  ? {
+                      ...profile?.certifications?.[editModal.index],
+                      index: editModal.index,
+                    }
+                  : profile
               }
+              onUpdate={(updatedData) => {
+                if (editModal.type === "experience") {
+                  // Update specific experience in the array
+                  setProfile((prev) => ({
+                    ...prev,
+                    work_experience: prev.work_experience.map((exp, idx) =>
+                      idx === editModal.index ? updatedData : exp
+                    ),
+                  }));
+                } else if (editModal.type === "add_experience") {
+                  // Add new experience to the array
+                  setProfile((prev) => ({
+                    ...prev,
+                    work_experience: [
+                      ...(prev.work_experience || []),
+                      updatedData,
+                    ],
+                  }));
+                } else if (editModal.type === "education") {
+                  // Update specific education in the array
+                  setProfile((prev) => ({
+                    ...prev,
+                    education: prev.education.map((edu, idx) =>
+                      idx === editModal.index ? updatedData : edu
+                    ),
+                  }));
+                } else if (editModal.type === "add_education") {
+                  // Add new education to the array
+                  setProfile((prev) => ({
+                    ...prev,
+                    education: [...(prev.education || []), updatedData],
+                  }));
+                } else if (editModal.type === "certification") {
+                  // Update specific certification in the array
+                  setProfile((prev) => ({
+                    ...prev,
+                    certifications: prev.certifications.map((cert, idx) =>
+                      idx === editModal.index ? updatedData : cert
+                    ),
+                  }));
+                } else if (editModal.type === "add_certification") {
+                  // Add new certification to the array
+                  setProfile((prev) => ({
+                    ...prev,
+                    certifications: [
+                      ...(prev.certifications || []),
+                      updatedData,
+                    ],
+                  }));
+                } else {
+                  // Handle other updates
+                  setProfile((prev) => ({
+                    ...prev,
+                    ...updatedData,
+                  }));
+                }
+              }}
               motionProps={{
                 variants: modalVariants,
                 initial: "initial",
