@@ -10,4 +10,25 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600, // Increase the warning limit to 600kb
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Create a vendor chunk for node_modules
+          if (id.includes("node_modules")) {
+            return "vendor";
+          }
+
+          // Create an auth chunk for authentication related code
+          if (
+            id.includes("src/context/authContext") ||
+            id.includes("src/hooks/useAxios")
+          ) {
+            return "auth";
+          }
+        },
+      },
+    },
+  },
 });

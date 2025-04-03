@@ -49,7 +49,7 @@ const useAxios = () => {
 
         // Add authorization header if token exists
         if (currentToken) {
-          config.headers.Authorization = Bearer ${currentToken};
+          config.headers.Authorization = `Bearer ${currentToken}`;
           // Check if token is expired
           try {
             const user = jwtDecode(currentToken);
@@ -63,7 +63,7 @@ const useAxios = () => {
               const result = await refreshAccessToken();
 
               if (result.success) {
-                config.headers.Authorization = Bearer ${currentToken};
+                config.headers.Authorization = `Bearer ${currentToken}`;
                 return config;
               } else {
                 logout();
