@@ -96,7 +96,7 @@ const JobSeekerProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [progressTracker, setProgressTracker] = useState(0);
   const axios = useAxios();
 
   useEffect(() => {
@@ -108,6 +108,7 @@ const JobSeekerProfile = () => {
 
         if (response) {
           setProfile(response.data.jobSeeker);
+          setProgressTracker(response.data.profileStatus.overallCompletionPercentage);
         } else {
           setError("Unable to fetch profile data");
         }
@@ -632,40 +633,40 @@ const JobSeekerProfile = () => {
 
   return (
     <motion.div
-      className="flex min-h-screen bg-sky-50"
+      className="flex flex-col lg:flex-row min-h-screen bg-sky-50"
       variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
     >
-      {/* Left Sidebar */}
+      {/* Left Sidebar - Full width on mobile/tablet, 1/3 width on desktop */}
       <motion.div
-        initial={{ x: -50, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-1/3"
+        className="w-full lg:w-1/3 lg:h-screen"
       >
-        <LeftSidebar profile={profile} />
+        <LeftSidebar profile={profile} progressTracker={progressTracker} />
       </motion.div>
 
-      {/* Right Side (Tabs and Content) */}
+      {/* Right Side (Tabs and Content) - Full width on mobile/tablet, 2/3 width on desktop */}
       <motion.div
-        className="w-3/4 p-5 overflow-y-auto h-screen"
-        initial={{ x: 50, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
+        className="w-full lg:w-2/3 p-4 md:p-5 overflow-y-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        {/* Tabs navigation */}
+        {/* Tabs navigation - Scrollable on mobile */}
         <motion.div
-          className="bg-white rounded-md shadow-sm mb-5 border border-gray-200"
+          className="bg-white rounded-md shadow-sm mb-5 border border-gray-200 overflow-x-auto"
           variants={cardVariants}
           initial="initial"
           animate="animate"
           whileHover="hover"
         >
-          <div className="flex border-b relative">
+          <div className="flex border-b relative min-w-max">
             <motion.button
-              className={`px-6 py-3 font-medium text-sm relative ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm relative ${
                 activeTab === "profile"
                   ? "text-sky-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -677,7 +678,7 @@ const JobSeekerProfile = () => {
               Profile
             </motion.button>
             <motion.button
-              className={`px-6 py-3 font-medium text-sm relative ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm relative ${
                 activeTab === "experience"
                   ? "text-sky-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -689,7 +690,7 @@ const JobSeekerProfile = () => {
               Experience
             </motion.button>
             <motion.button
-              className={`px-6 py-3 font-medium text-sm relative ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm relative ${
                 activeTab === "education"
                   ? "text-sky-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -701,7 +702,7 @@ const JobSeekerProfile = () => {
               Education
             </motion.button>
             <motion.button
-              className={`px-6 py-3 font-medium text-sm relative ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm relative ${
                 activeTab === "skills"
                   ? "text-sky-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -713,7 +714,7 @@ const JobSeekerProfile = () => {
               Skills
             </motion.button>
             <motion.button
-              className={`px-6 py-3 font-medium text-sm relative ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm relative ${
                 activeTab === "preferences"
                   ? "text-sky-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -725,11 +726,17 @@ const JobSeekerProfile = () => {
               Preferences
             </motion.button>
 
-            {/* Animated underline indicator */}
+            {/* Animated underline indicator - adjusted for mobile */}
             <motion.div
               className="absolute bottom-0 h-0.5 w-16 bg-sky-500"
               animate={activeTab}
-              variants={tabUnderlineVariants}
+              variants={{
+                profile: { x: window.innerWidth < 640 ? 16 : 32 },
+                experience: { x: window.innerWidth < 640 ? 84 : 132 },
+                education: { x: window.innerWidth < 640 ? 170 : 220 },
+                skills: { x: window.innerWidth < 640 ? 236 : 304 },
+                preferences: { x: window.innerWidth < 640 ? 300 : 388 },
+              }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
           </div>
@@ -847,7 +854,7 @@ const JobSeekerProfile = () => {
 
       {/* Floating action button with animations */}
       <motion.div
-        className="fixed bottom-6 right-6"
+        className="fixed bottom-6 right-6 z-10"
         variants={floatingButtonVariants}
         initial="initial"
         animate="animate"

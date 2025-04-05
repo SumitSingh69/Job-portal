@@ -115,302 +115,244 @@ const contactItemVariants = {
   },
 };
 
-const LeftSidebar = ({ profile }) => {
+const LeftSidebar = ({ profile, progressTracker }) => {
+  console.log(profile);
   // Check if profile exists and has the expected structure
   if (!profile) {
     return <div>Loading profile...</div>;
   }
 
   // Determine current work experience for "role" and "company"
-  const currentWork = profile.work_experience?.find(exp => exp.current) || 
-                      profile.work_experience?.[0] || {};
-  
+  const currentWork =
+    profile.work_experience?.find((exp) => exp.current) ||
+    profile.work_experience?.[0] ||
+    {};
+
   // Format salary from expected_salary
-  const formattedSalary = profile.expected_salary 
+  const formattedSalary = profile.expected_salary
     ? `${profile.expected_salary.currency} ${profile.expected_salary.min}-${profile.expected_salary.max}`
     : "Not specified";
 
   return (
     <motion.div
-      className="w-full h-screen text-black p-5 bg-sky-50"
+      className="w-full lg:h-screen text-black p-3 sm:p-5 bg-sky-50"
       variants={sidebarVariants}
       initial="initial"
       animate="animate"
     >
       <motion.div
-        className="w-full rounded-md p-6 border border-gray-200 bg-white shadow-sm"
+        className="w-full rounded-md p-4 sm:p-6 border border-gray-200 bg-white shadow-sm"
         variants={cardVariants}
         whileHover="hover"
       >
-        <div className="flex flex-col items-center">
-          <motion.div
-            className="h-20 w-20 bg-blue-200 rounded-full overflow-hidden mb-4 relative group"
-            variants={profileImageVariants}
-            whileHover="hover"
-          >
-            <img
-              className="object-cover h-full w-full"
-              src={profile.photo || "/api/placeholder/80/80"}
-              alt=""
-            />
+        <div className="flex flex-col md:flex-row items-center">
+          <div className="flex flex-col items-center md:w-1/3">
             <motion.div
-              className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all"
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
+              className="h-16 w-16 sm:h-20 sm:w-20 bg-blue-200 rounded-full overflow-hidden mb-3 relative group"
+              variants={profileImageVariants}
+              whileHover="hover"
             >
+              <img
+                className="object-cover h-full w-full"
+                src={profile.photo || "/api/placeholder/80/80"}
+                alt=""
+              />
               <motion.div
-                variants={iconButtonVariants}
-                whileHover="hover"
-                whileTap="tap"
+                className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center transition-all"
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
               >
-
-
-                <Pencil className="w-6 h-6 text-white" />
+                <motion.div
+                  variants={iconButtonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                >
+                  <Pencil className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </motion.div>
               </motion.div>
             </motion.div>
-          </motion.div>
-          <motion.div className="text-center mb-4" variants={textFadeVariants}>
-            <div className="flex items-center justify-center">
-              <h2 className="font-bold text-xl">{profile.user_id?.firstName || "User"}</h2>
-              
-            </div>
-            <motion.h5
-              className="text-gray-700"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {currentWork.role || "Role not specified"}
-            </motion.h5>
-            <motion.p
-              className="text-gray-600"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              {currentWork.company || "Company not specified"}
-            </motion.p>
-            <motion.p
-              className="text-gray-500 text-sm"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              {currentWork.start_date ? new Date(currentWork.start_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ""} 
-              {" - "}
-              {currentWork.current ? "Present" : (currentWork.end_date ? new Date(currentWork.end_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "")}
-            </motion.p>
-            <motion.p
-              className="text-gray-500 text-sm"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              {profile.location?.city}, {profile.location?.country}
-            </motion.p>
-          </motion.div>
-          <motion.hr
-            className="w-full border-t my-4"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          />
-
-          <div className="w-full flex justify-between items-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
+              className="text-center mb-4"
+              variants={textFadeVariants}
             >
-              <p className="text-gray-500 text-sm">Total exp</p>
-              <h5 className="font-semibold">
-                {profile.years_of_experience || 0} yrs
-              </h5>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6, duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <p className="text-gray-500 text-sm">Salary</p>
-              <h5 className="font-semibold">{formattedSalary}</h5>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.7, duration: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center justify-center"
-            >
-              <div className="flex items-center">
-                <span className="text-green-500 bg-green-500 h-2 w-2 rounded-full animate-pulse inline-block mr-2"></span>
-                <h5 className="font-semibold">active</h5>
+              <div className="flex items-center justify-center">
+                <h2 className="font-bold text-lg sm:text-xl">
+                  {profile.user_id?.firstName || "User"}
+                </h2>
               </div>
+              <motion.h5
+                className="text-gray-700 text-sm sm:text-base"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                {currentWork.role || "Role not specified"}
+              </motion.h5>
+              <motion.p
+                className="text-gray-600 text-xs sm:text-sm"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {currentWork.company || "Company not specified"}
+              </motion.p>
             </motion.div>
+          </div>
+
+          <div className="md:w-2/3 w-full">
+            <motion.hr
+              className="w-full border-t my-2 sm:my-4 md:hidden"
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            />
+
+            <div className="hidden md:block text-center md:text-left mb-3">
+              <motion.p
+                className="text-gray-500 text-sm"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                {currentWork.start_date
+                  ? new Date(currentWork.start_date).toLocaleDateString(
+                      "en-US",
+                      { month: "long", year: "numeric" }
+                    )
+                  : ""}
+                {" - "}
+                {currentWork.current
+                  ? "Present"
+                  : currentWork.end_date
+                  ? new Date(currentWork.end_date).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : ""}
+              </motion.p>
+              <motion.p
+                className="text-gray-500 text-sm"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                {profile.location?.city}, {profile.location?.country}
+              </motion.p>
+            </div>
+
+            <div className="w-full flex justify-between items-center px-2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                className="text-center"
+              >
+                <p className="text-gray-500 text-xs sm:text-sm">Total exp</p>
+                <h5 className="font-semibold text-sm sm:text-base">
+                  {profile.years_of_experience || 0} yrs
+                </h5>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6, duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                className="text-center"
+              >
+                <p className="text-gray-500 text-xs sm:text-sm">Salary</p>
+                <h5 className="font-semibold text-sm sm:text-base">
+                  {formattedSalary}
+                </h5>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7, duration: 0.3 }}
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center justify-center"
+              >
+                <div className="flex items-center">
+                  <span className="text-green-500 bg-green-500 h-2 w-2 rounded-full animate-pulse inline-block mr-1 sm:mr-2"></span>
+                  <h5 className="font-semibold text-sm sm:text-base">active</h5>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
-      </motion.div>
 
-      <motion.div
-        className="w-full bg-white rounded-md mt-2 p-4 border border-gray-200 shadow-sm"
-        variants={cardVariants}
-        whileHover="hover"
-        transition={{ delay: 0.2 }}
-      >
         <motion.div
-          className="flex items-center justify-between mb-1 p-2"
-          variants={contactItemVariants}
-          whileHover="hover"
+          className="mt-4 sm:mt-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
         >
-          <div className="flex items-center gap-2">
-            <motion.div
-              initial={{ rotate: 0 }}
-              whileHover={{ rotate: 15, scale: 1.2 }}
-              transition={{ type: "spring", stiffness: 300, damping: 10 }}
-            >
-              <Phone className="h-4 w-4 text-sky-600" />
-            </motion.div>
-            <p>{profile.user_id?.phonenumber || "Phone not added"}</p>
-          </div>
-        </motion.div>
-        <motion.div
-          className="flex items-center gap-2 p-2"
-          variants={contactItemVariants}
-          whileHover="hover"
-        >
-          <motion.div
-            initial={{ rotate: 0 }}
-            whileHover={{ rotate: -15, scale: 1.2 }}
-            transition={{ type: "spring", stiffness: 300, damping: 10 }}
-          >
-            <Mail className="h-4 w-4 text-sky-600" />
-          </motion.div>
-          <p>{profile.user_id?.email || "Email not added"}</p>
-        </motion.div>
-      </motion.div>
+          <h3 className="font-medium text-sm sm:text-base mb-2">
+            Contact Info
+          </h3>
 
-      <motion.div
-        className="w-full bg-white rounded-md mt-2 p-4 border border-gray-200 shadow-sm"
-        variants={cardVariants}
-        whileHover="hover"
-        transition={{ delay: 0.3 }}
-      >
-        <div className="flex items-center p-2">
           <motion.div
-            className="w-1/4 flex justify-center"
-            variants={progressVariants}
-            initial="initial"
-            animate="animate"
-            whileHover={{ scale: 1.1 }}
+            className="flex items-center gap-2 p-2 hover:bg-sky-100 rounded transition-colors"
+            variants={contactItemVariants}
+            whileHover="hover"
           >
-            <CircularProgress percentage={profile.profileStatus?.overallCompletionPercentage || 75} />
-          </motion.div>
-          <motion.div
-            className="w-3/4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.7, duration: 0.4 }}
-          >
-            <h5 className="font-medium">Profile score</h5>
-            <p className="text-sm text-gray-600">
-              Recruiters seek 100% profiles - complete yours to stand out!
+            <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-sky-500" />
+            <p className="text-gray-700 text-xs sm:text-sm">
+              {profile.user_id?.email || "Email not available"}
             </p>
           </motion.div>
-        </div>
-        <motion.hr
-          className="w-full border-t my-3"
-          initial={{ width: "0%" }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-        />
+
+          <motion.div
+            className="flex items-center gap-2 p-2 hover:bg-sky-100 rounded transition-colors"
+            variants={contactItemVariants}
+            whileHover="hover"
+          >
+            <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-sky-500" />
+            <p className="text-gray-700 text-xs sm:text-sm">
+              {profile.phone || "Phone not available"}
+            </p>
+          </motion.div>
+        </motion.div>
+
         <motion.div
-          className="mt-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
+          className="mt-4 sm:mt-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
         >
-          {(profile.profileStatus?.recommendations?.length > 0 || !profile.profileStatus?.isProfileComplete) && (
-            <>
-              <h6 className="font-medium text-sm">Complete your profile:</h6>
-              <ul className="mt-2 space-y-2">
-                {profile.profileStatus?.missingEssentialFields?.map((field, index) => (
-                  <motion.li
-                    key={field}
-                    className="flex items-center text-sm"
-                    variants={listItemVariants}
-                    whileHover="hover"
-                    custom={index}
-                  >
-                    <motion.span
-                      className="w-2 h-2 bg-red-500 rounded-full mr-2"
-                      animate={{
-                        scale: [1, 1.5, 1],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                        delay: index * 0.5,
-                      }}
-                    ></motion.span>
-                    Add your {field.replace(/_/g, ' ')}
-                  </motion.li>
-                ))}
-                {profile.profileStatus?.missingEssentialFields?.length === 0 && !profile.certifications?.length && (
-                  <motion.li
-                    className="flex items-center text-sm"
-                    variants={listItemVariants}
-                    whileHover="hover"
-                    custom={1}
-                  >
-                    <motion.span
-                      className="w-2 h-2 bg-red-500 rounded-full mr-2"
-                      animate={{
-                        scale: [1, 1.5, 1],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                      }}
-                    ></motion.span>
-                    Add your certifications
-                  </motion.li>
-                )}
-                {profile.profileStatus?.recommendations?.map((recommendation, index) => (
-                  <motion.li
-                    key={`rec-${index}`}
-                    className="flex items-center text-sm"
-                    variants={listItemVariants}
-                    whileHover="hover"
-                    custom={index + 2}
-                  >
-                    <motion.span
-                      className="w-2 h-2 bg-yellow-500 rounded-full mr-2"
-                      animate={{
-                        scale: [1, 1.5, 1],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                        delay: (index + 2) * 0.5,
-                      }}
-                    ></motion.span>
-                    {recommendation}
-                  </motion.li>
-                ))}
-              </ul>
-            </>
-          )}
-          {profile.profileStatus?.isProfileComplete && profile.profileStatus?.recommendations?.length === 0 && (
-            <div className="text-center py-2">
-              <p className="text-green-600 font-medium">Your profile is complete! 🎉</p>
-              <p className="text-sm text-gray-500 mt-1">You're now more visible to recruiters.</p>
+          <h3 className="font-medium text-sm sm:text-base mb-2">
+            Profile Completion
+          </h3>
+          <div className="flex items-center">
+            <motion.div
+              className="w-16 h-16 sm:w-20 sm:h-20 relative mr-3"
+              variants={progressVariants}
+            >
+              <CircularProgress
+                percentage={progressTracker}
+                color="#0EA5E9"
+                size={80}
+                strokeWidth={8}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-sky-500 font-bold text-sm sm:text-lg">
+                  {progressTracker || 65}%
+                </span>
+              </div>
+            </motion.div>
+            <div>
+              <p className="text-gray-600 text-xs sm:text-sm mb-1">
+                Complete your profile to increase your chances of getting hired.
+              </p>
+              <motion.button
+                className="text-sky-500 hover:text-sky-600 text-xs sm:text-sm font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                See what's missing
+              </motion.button>
             </div>
-          )}
+          </div>
         </motion.div>
       </motion.div>
     </motion.div>
