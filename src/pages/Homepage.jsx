@@ -31,22 +31,36 @@ import { useContext } from "react";
 import toast from "@/components/custom/toast";
 import JobPortalHero from "@/components/custom/Homepage/Hero";
 import { AuthContext } from "../context/authContext";
+import useAxios from "@/hooks/useAxios";
 
 const JobCategoriesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("IT Jobs");
   const { user } = useContext(AuthContext);
   const toastShownRef = useRef(false);
+  const axios = useAxios();
+  
 
   useEffect(() => {
     if (user && !toastShownRef.current) {
       toast.success("Welcome " + user.firstName);
-      setTimeout(() => {
-        toast.info("Please Visit your Profile to update your details");
-      }, 3000);
       toastShownRef.current = true;
     }
   }, [user]);
-
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const response = await axios.get(`job-seeker/me`);
+        if(response.data.profileStatus.isProfileComplete === false) {
+          toast.info("Please Visit your Profile to update your details");
+        }
+        
+      } catch (error) {
+        console.error("Error fetching progress:", error);
+      }
+    }
+    fetchProgress();
+    console.log("hello ji");
+  },[axios])
   // console.log(user);
 
   const categories = {
