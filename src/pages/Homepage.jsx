@@ -60,36 +60,6 @@ const JobCategoriesSection = () => {
       },
       trending: ["Cloud Computing", "Machine Learning", "DevOps", "Blockchain"],
     },
-    Sales: {
-      icon: <TrendingUp className="text-green-500" size={24} />,
-      colorClass: "green",
-      stats: {
-        openings: "12,789",
-        avgSalary: "₹6-40 LPA",
-        growth: "+20%",
-      },
-      trending: [
-        "Account Management",
-        "Business Development",
-        "Inside Sales",
-        "Sales Operations",
-      ],
-    },
-    Marketing: {
-      icon: <Target className="text-purple-500" size={24} />,
-      colorClass: "purple",
-      stats: {
-        openings: "9,567",
-        avgSalary: "₹8-28 LPA",
-        growth: "+18%",
-      },
-      trending: [
-        "Digital Marketing",
-        "Content Strategy",
-        "Brand Management",
-        "Social Media",
-      ],
-    },
   };
 
   return (
@@ -194,32 +164,6 @@ const Homepage = () => {
       isHot: true,
       isRemote: true,
     },
-    {
-      title: "Product Manager",
-      company: "Google Inc",
-      logo: "https://t3.ftcdn.net/jpg/03/88/07/84/360_F_388078454_mKtbdXYF9cyQovCCTsjqI0gbfu7gCcSp.jpg",
-      location: "Mumbai",
-      experience: "4-7 years",
-      salary: "₹20-30 LPA",
-      skills: ["Product Management", "Agile", "Analytics", "User Research"],
-      type: "Full-time",
-      postedDays: 1,
-      isHot: true,
-      isRemote: false,
-    },
-    {
-      title: "Frontend Developer",
-      company: "Myntra",
-      logo: "https://akm-img-a-in.tosshub.com/businesstoday/images/story/202101/myntra_logo_660_300121011207.jpg?size=948:533",
-      location: "Hyderabad",
-      experience: "3-5 years",
-      salary: "₹18-28 LPA",
-      skills: ["React", "JavaScript", "TypeScript", "Next.js"],
-      type: "Remote",
-      postedDays: 3,
-      isHot: false,
-      isRemote: true,
-    },
   ];
 
   const companyStats = {
@@ -232,16 +176,6 @@ const Homepage = () => {
       posted: 3,
       topRoles: ["Software Engineer", "Product Manager", "Data Scientist"],
       locations: ["Bangalore", "Hyderabad", "Mumbai"],
-    },
-    Microsoft: {
-      overview: "Global leader in software and cloud solutions",
-      benefits: ["Health Benefits", "RSUs", "Remote Work"],
-      logo: "https://cdn-dynmedia-1.microsoft.com/is/image/microsoftcorp/RWCZER-Legal-IP-Trademarks-CP-MS-logo-740x417-1?wid=406&hei=230&fit=crop",
-      rating: 4.3,
-      reviews: "12.8K",
-      posted: 2,
-      topRoles: ["Cloud Architect", "Program Manager", "Software Developer"],
-      locations: ["Bangalore", "Hyderabad", "Noida"],
     },
   };
 
