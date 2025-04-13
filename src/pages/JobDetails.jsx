@@ -12,6 +12,7 @@ const JobDetails = () => {
   const [applyMessage, setApplyMessage] = useState("");
   const [saved, setSaved] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState(null);
   const { id } = useParams();
   const axios = useAxios();
 
@@ -54,10 +55,10 @@ const JobDetails = () => {
 
         if (jobExists) {
           setHasApplied(true);
-          console.log("User has already applied for this job");
+          // console.log("User has already applied for this job");
         } else {
           setHasApplied(false);
-          console.log("User has not applied for this job yet");
+          // console.log("User has not applied for this job yet");
         }
       }
     } catch (err) {
@@ -78,6 +79,7 @@ const JobDetails = () => {
 
       if (response.data.success || response.data.application) {
         setHasApplied(true);
+        setApplicationStatus("submited"); // Set status to submitted when application is successful
         setApplyMessage("Successfully applied to the job");
       } else {
         setApplyMessage(response.data.message || "Failed to apply for job");
@@ -91,6 +93,31 @@ const JobDetails = () => {
       setApplyLoading(false);
     }
   };
+  useEffect(() => {
+    const checkApplicationStatus = async () => {
+      try {
+        const response = await axios.get(`/application/get/${id}`);
+        if (response.data.success) {
+          console.log("Application status response:", response.data);
+          if (response.data.data && response.data.data.status) {
+            setApplicationStatus(response.data.data.status);
+            console.log(
+              "Setting application status to:",
+              response.data.data.status
+            );
+          }
+        }
+      } catch (error) {
+        console.log("Error checking application status:", error);
+      }
+    };
+    checkApplicationStatus();
+  }, [axios, id]);
+
+  // Use a useEffect to track changes to applicationStatus
+  useEffect(() => {
+    console.log("Application status changed to:", applicationStatus);
+  }, [applicationStatus]);
 
   const toggleSaveJob = () => {
     setSaved(!saved);
@@ -973,6 +1000,34 @@ const JobDetails = () => {
                 ></div>
               </div>
             </div>
+
+            {/* Application Status */}
+            {applicationStatus && (
+              <div className="bg-white bg-opacity-10 rounded-lg p-4 mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-blue-100">Application Status</span>
+                  <span
+                    className={`font-bold px-3 py-1 rounded-full text-sm ${
+                      applicationStatus === "submited" ||
+                      applicationStatus === "submitted"
+                        ? "bg-green-500 text-white"
+                        : applicationStatus === "reviewing"
+                        ? "bg-yellow-500 text-white"
+                        : applicationStatus === "rejected"
+                        ? "bg-red-500 text-white"
+                        : applicationStatus === "shortlisted"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-300 text-gray-800"
+                    }`}
+                  >
+                    {applicationStatus === "submited"
+                      ? "Submitted"
+                      : applicationStatus.charAt(0).toUpperCase() +
+                        applicationStatus.slice(1)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {hasApplied ? (
               <div className="bg-green-500 bg-opacity-20 border border-green-300 rounded-lg p-4 flex items-center gap-3">
