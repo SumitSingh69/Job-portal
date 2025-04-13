@@ -31,6 +31,8 @@ const JobBoard = () => {
   });
   const navigate = useNavigate();
   const location = useLocation();
+  const toastShownRef = useRef(false);
+  
 
   const axios = useAxios();
 
@@ -67,7 +69,12 @@ const JobBoard = () => {
   }, [location.search]);
 
   useEffect(()=>{
-    toast.info("Please click on apply filter after applying any filter");
+    if(!toastShownRef.current){
+
+      toast.info("Please click on apply filter after applying any filter");
+      toastShownRef.current = true;
+    }
+
   },[])
 
   useEffect(() => {
