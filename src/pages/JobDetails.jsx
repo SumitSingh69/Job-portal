@@ -24,6 +24,7 @@ const JobDetails = () => {
       try {
         setLoading(true);
         const response = await axios.get(`/job/${id}`);
+        console.log(response.data)
         if (response.data.success) {
           setJob(response.data.job);
 
@@ -113,7 +114,6 @@ const JobDetails = () => {
         url: window.location.href,
       });
     } else {
-      // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href);
       setApplyMessage("Job link copied to clipboard");
       setTimeout(() => setApplyMessage(""), 3000);
@@ -179,7 +179,20 @@ const JobDetails = () => {
 
   // Format salary range
   const formatSalary = (min, max) => {
-    return `$${min.toLocaleString()} - $${max.toLocaleString()} per year`;
+    const formatIndianCurrency = (amount) => {
+      if (amount >= 10000000) {
+        // For amounts >= 1 crore
+        return `₹${(amount / 10000000).toFixed(2)} Cr`;
+      } else if (amount >= 100000) {
+        // For amounts >= 1 lakh
+        return `₹${(amount / 100000).toFixed(2)} L`;
+      } else {
+        // For smaller amounts
+        return `₹${amount.toLocaleString('en-IN')}`;
+      }
+    };
+    
+    return `${formatIndianCurrency(min)} - ${formatIndianCurrency(max)} per year`;
   };
 
   // Format date
@@ -469,7 +482,7 @@ const JobDetails = () => {
               )}
 
               <div className="flex gap-3">
-                <motion.button
+                {/* <motion.button
                   onClick={toggleSaveJob}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -497,7 +510,7 @@ const JobDetails = () => {
                       d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                     ></path>
                   </svg>
-                </motion.button>
+                </motion.button> */}
 
                 <motion.button
                   onClick={shareJob}
@@ -1161,7 +1174,7 @@ const JobDetails = () => {
                 </div>
                 <div>
                   <div className="text-gray-500 text-sm">Job Type</div>
-                  <div className="font-medium text-gray-900">{job.jobType}</div>
+                  <div className="font-medium text-gray-900">{(job.location.jobType)}</div>
                 </div>
               </div>
 
@@ -1223,7 +1236,7 @@ const JobDetails = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
+              {/* <div className="flex items-start gap-3">
                 <div className="bg-purple-100 p-2 rounded-lg">
                   <svg
                     className="w-5 h-5 text-purple-600"
@@ -1246,12 +1259,12 @@ const JobDetails = () => {
                     {job.experienceLevel}
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </motion.div>
 
           {/* Similar Jobs */}
-          <motion.div
+          {/* <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
@@ -1278,7 +1291,7 @@ const JobDetails = () => {
               Here are some similar opportunities based on your profile
             </p>
             <div className="space-y-4">
-              {/* This would typically be populated from an API call with similar jobs */}
+              
               <div className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-300 cursor-pointer">
                 <h4 className="font-semibold text-indigo-700">
                   Senior Frontend Developer
@@ -1347,7 +1360,7 @@ const JobDetails = () => {
                 ></path>
               </svg>
             </a>
-          </motion.div>
+          </motion.div> */}
 
           {/* Application Tips */}
           <motion.div
